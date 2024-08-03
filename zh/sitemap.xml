@@ -2,112 +2,17 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/papermod-installation/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/papermod-installation/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/papermod-installation/"
-                />
+    <loc>https://weskwong.github.io/zh/categories/coding/</loc>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
   </url><url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/papermod-features/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/papermod-features/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/papermod-features/"
-                />
+    <loc>https://weskwong.github.io/zh/tags/swiftui/</loc>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
   </url><url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/papermod-faq/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/papermod-faq/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/papermod-faq/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/papermod-icons/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/papermod-icons/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/papermod-icons/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/papermod-variables/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/papermod-variables/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/papermod-variables/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/docs/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/docs/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/docs/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/papermod/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/papermod/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/papermod/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/papermod/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/papermod/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/papermod/"
-                />
+    <loc>https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/</loc>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
   </url><url>
     <loc>https://weskwong.github.io/zh/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en-us"
@@ -120,7 +25,7 @@
                 />
   </url><url>
     <loc>https://weskwong.github.io/zh/tags/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en-us"
@@ -132,112 +37,8 @@
                 href="https://weskwong.github.io/zh/tags/"
                 />
   </url><url>
-    <loc>https://weskwong.github.io/zh/posts/</loc>
-    <lastmod>2021-01-20T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/css/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/css/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/css/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/html/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/html/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/html/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/markdown/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/markdown/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/markdown/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/markdown-syntax/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/markdown-syntax/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/markdown-syntax/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/categories/syntax/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/categories/syntax/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/categories/syntax/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/themes/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/themes/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/themes/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/categories/themes/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/categories/themes/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/categories/themes/"
-                />
-  </url><url>
     <loc>https://weskwong.github.io/zh/categories/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en-us"
@@ -249,134 +50,17 @@
                 href="https://weskwong.github.io/zh/categories/"
                 />
   </url><url>
-    <loc>https://weskwong.github.io/zh/tags/code/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
+    <loc>https://weskwong.github.io/zh/posts/</loc>
+    <lastmod>2024-08-03T11:20:37+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/code/"
+                href="https://weskwong.github.io/en/posts/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/code/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/code_syntax/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/code_syntax/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/code_syntax/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/gist/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/gist/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/gist/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/privacy/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/privacy/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/privacy/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/rich-content/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/rich-content/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/rich-content/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/shortcodes/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/shortcodes/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/shortcodes/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/syntax/</loc>
-    <lastmod>2019-03-10T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/syntax/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/syntax/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/math-typesetting/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/math-typesetting/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/math-typesetting/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/tags/emoji/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/tags/emoji/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/tags/emoji/"
-                />
-  </url><url>
-    <loc>https://weskwong.github.io/zh/posts/emoji-support/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="https://weskwong.github.io/en/posts/emoji-support/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://weskwong.github.io/zh/posts/emoji-support/"
+                href="https://weskwong.github.io/zh/posts/"
                 />
   </url><url>
     <loc>https://weskwong.github.io/zh/archives/</loc>

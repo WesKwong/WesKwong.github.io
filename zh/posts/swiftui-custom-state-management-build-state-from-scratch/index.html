@@ -1,0 +1,637 @@
+<!doctype html><html lang=zh dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>SwiftUI自定义状态管理：从头开始构建@State | WesKwong's Blog</title>
+<meta name=keywords content="SwiftUI"><meta name=description content="通过利用SwiftUI提供的自定义状态管理API，构建一个简易的`@State`，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和`@State`的实现原理。"><meta name=author content="WesKwong"><link rel=canonical href=https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/><meta name=google-site-verification content="XYZabc"><meta name=yandex-verification content="XYZabc"><meta name=msvalidate.01 content="XYZabc"><link crossorigin=anonymous href=/assets/css/stylesheet.5ff2630c4d1b3e25bc21f0ecd96681dbcf58219e741fa627857820b5485cb770.css integrity="sha256-X/JjDE0bPiW8IfDs2WaB289YIZ50H6YnhXggtUhct3A=" rel="preload stylesheet" as=style><link rel=icon href=https://weskwong.github.io/images/avatar.png><link rel=icon type=image/png sizes=16x16 href=https://weskwong.github.io/images/avatar.png><link rel=icon type=image/png sizes=32x32 href=https://weskwong.github.io/images/avatar.png><link rel=apple-touch-icon href=https://weskwong.github.io/images/avatar.png><link rel=mask-icon href=https://weskwong.github.io/images/avatar.png><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=zh href=https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:title" content="SwiftUI自定义状态管理：从头开始构建@State"><meta property="og:description" content="通过利用SwiftUI提供的自定义状态管理API，构建一个简易的`@State`，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和`@State`的实现原理。"><meta property="og:type" content="article"><meta property="og:url" content="https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/"><meta property="og:image" content="https://weskwong.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-08-03T11:20:37+08:00"><meta property="article:modified_time" content="2024-08-03T11:20:37+08:00"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://weskwong.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:title content="SwiftUI自定义状态管理：从头开始构建@State"><meta name=twitter:description content="通过利用SwiftUI提供的自定义状态管理API，构建一个简易的`@State`，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和`@State`的实现原理。"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"文章","item":"https://weskwong.github.io/zh/posts/"},{"@type":"ListItem","position":2,"name":"SwiftUI自定义状态管理：从头开始构建@State","item":"https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"SwiftUI自定义状态管理：从头开始构建@State","name":"SwiftUI自定义状态管理：从头开始构建@State","description":"通过利用SwiftUI提供的自定义状态管理API，构建一个简易的`@State`，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和`@State`的实现原理。","keywords":["SwiftUI"],"articleBody":"在SwiftUI状态管理中，@State作为数据源的定义，极为重要，然而SwiftUI作为一个闭源框架，仅对外公开了@State的定义：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 @frozen @propertyWrapper public struct State\u003cValue\u003e : DynamicProperty { /// Initialize with the provided initial value. public init(wrappedValue value: Value) /// Initialize with the provided initial value. public init(initialValue value: Value) /// The current state value. public var wrappedValue: Value { get nonmutating set } /// Produces the binding referencing this state value public var projectedValue: Binding\u003cValue\u003e { get } } 而没有公开内部的实现，因此本文将通过利用SwiftUI提供的自定义状态管理API，构建一个简易的@State，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和@State的实现原理。\n属性包装器Property Wrapper 使用背景 为了更好地理解Property Wrapper，假设我们需要向属性添加日志记录的功能：当我们写入一个属性时，打印原有的旧值和即将写入的新值：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 struct Storage { private var _x: Int = 0 var x: Int { get { return _x } set { print(\"Set value: \\(_x) -\u003e \\(newValue)\") _x = newValue } } } var storage = Storage() storage.x = 1 storage.x = 10 storage.x = 100 /* the app will print: Set value: 0 -\u003e 1 Set value: 1 -\u003e 10 Set value: 10 -\u003e 100 */ 当storage中拥有更多的属性时，想要向这些属性添加日志记录功能将会使代码变得十分冗长：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 struct Storage { private var _x: Int = 0 private var _y: Int = 0 var x: Int { get { return _x } set { print(\"Set value: \\(_x) -\u003e \\(newValue)\") _x = newValue } } var y: Int { get { return _y } set { print(\"Set value: \\(_y) -\u003e \\(newValue)\") _y = newValue } } } var storage = Storage() storage.x = 1 storage.x = 10 storage.x = 100 storage.y = 1 storage.y = 10 storage.y = 100 /* the app will print: Set value: 0 -\u003e 1 Set value: 1 -\u003e 10 Set value: 10 -\u003e 100 Set value: 0 -\u003e 1 Set value: 1 -\u003e 10 Set value: 10 -\u003e 100 */ 我们可以考虑将这个功能包装成一个新类型，该新类型拥有日志记录功能：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 struct logger\u003cT\u003e { private var _val: T init(val: T) { _val = val } var val: T { get { return _val } set { print(\"Set value: \\(_val) -\u003e \\(newValue)\") _val = newValue } } } struct Storage { private var _x: logger\u003cInt\u003e = logger\u003cInt\u003e(val: 0) private var _y: logger\u003cInt\u003e = logger\u003cInt\u003e(val: 0) var x: Int { get { return _x.val } set { _x.val = newValue } } var y: Int { get { return _y.val } set { _y.val = newValue } } } /* The rest remains unchanged... */ 使用方法 然而，这样的写法依然非常冗长，Swift 5提供了一个新特性Property Wrapper，他可以使得自定义的新类型成为一个自定义的新属性包装器：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 @propertyWrapper struct logger\u003cT\u003e { private var _val: T init(wrappedValue: T) { _val = wrappedValue } var wrappedValue: T { get { return _val } set { print(\"Set value: \\(_val) -\u003e \\(newValue)\") _val = newValue } } } 由@propertyWrapper包装的新类型必须具有wrappedValue属性，被这个新包装器包装的属性，将会被存储到包装器内部的_val中，而向外表现出来的行为，例如get和set，将会被wrappedValue所代理：\n1 2 3 4 5 struct Storage { // @propertyWrapper 具有两种初始化的方法： @logger var x = 0 // 由编译器隐式调用`init(wrappedValue: T)` @logger(wrappedValue: 0) var y // 显式指定wrappedValue初始化值 } 可以看到，@propertyWrapper帮助我们将冗长的逻辑缩短为仅需额外使用一个包装器符号即可。\n访问包装器实例 除此之外，包装器内还可以定义一些额外的工具函数：\n1 2 3 4 5 6 7 8 9 10 @propertyWrapper struct logger\u003cT\u003e { private var _val: T init(wrappedValue: T) { /* ... */ } var wrappedValue: T { /* ... */ } func greet() { print(\"I'm a logger!\") } } 在变量名前添加下划线_为包装器实例，通过访问包装器实例，我们可以调用包装器中定义的工具函数：\n1 storage._x.greet() 但是直接从外部调用会产生编译错误：\nerror: '_x' is inaccessible due to 'private' protection level\n这是因为包装器实例默认为private属性，我们可以通过projectedValue来访问公开更多对外的API，从而实现访问包装器实例：\n1 2 3 4 5 6 7 8 9 10 11 12 @propertyWrapper struct logger\u003cT\u003e { private var _val: T init(wrappedValue: T) { /* ... */ } var wrappedValue: T { /* ... */ } var projectedValue: logger\u003cT\u003e { return self } func greet() { /* ... */ } } 此时我们可以通过Swift提供的语法糖访问projectedValue：\n1 2 storage.$x.greet() // I'm a logger! 经过上面的学习，我们可以开始尝试动手构建@State了，参考官方定义，我们可以尝试简单地定义包装器@MyState：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 import SwiftUI @propertyWrapper struct MyState\u003cT\u003e { private var _val: T init(wrappedValue: T) { _val = wrappedValue } var wrappedValue: T { get { return _val } set { _val = newValue } } } 然后使用我们定义好的@MyState：\n1 2 3 4 5 6 7 8 9 10 11 12 struct MyView: View { @MyState private var msgFlag: Bool = true var body: some View { Text(msgFlag ? \"Hello, World!\" : \"Hello, Swift!\") Button(\"Click Me\") { if msgFlag { msgFlag = false } else { msgFlag = true } } } } 然而，此时会产生编译报错：\nerror: cannot assign to property: 'self' is immutable\n这个报错的原因是结构体MyView是不可变的，属性msgFlag（MyState包装器实例）属于MyView，然而我们的操作msgFlag = false会改变msgFlag，即改变了MyState实例，从而改变了MyView。\n不可变标记nonmutating 参考官方定义public var wrappedValue: Value { get nonmutating set }，我们发现需要在wrappedValue中加入不可变标记nonmutating，使得MyState实例向MyView承诺，向自己的赋值操作不会改变自己：\n1 2 3 4 5 6 7 8 @propertyWrapper struct MyState\u003cT\u003e { ... var wrappedValue: T { ... nonmutating set { _val = newValue } } } 此时，编译错误的定位位置从MyView的msgFlag = false处移动到了MyState的_val = newValue处，因为虽然MyState对外承诺不会改变自己，但是实际上却对自身内部属性_val执行了赋值操作。\n虽然我们此时仍未能编译成功，但是我们将问题变成了：\n如何在赋值时不改变_val属性？\n引用类型Reference Type 为了解决这个问题，我们很容易联想到C语言中的指针类型，即结构体内只保存指向属性实际存储地址的指针，在赋值的时候，我们改变的是实际存储地址中的值，而结构体本身的指针并不会改变。\n在Swift中，数据类型分为两种：\n值类型(Value Types)：每个实例保留一份独有的数据拷贝，一般以结构体struct、枚举enum 或者元组tuple的形式出现。 引用类型(Reference Type)：每个实例共享同一份数据来源，一般以类class的形式出现。 两种类型的区别如下：\n1 2 3 4 5 6 7 8 9 10 // 值类型 struct val_type_data\u003cT\u003e { var val: T init(_ initval: T) { val = initval } } var x = val_type_data(1) var y = x y.val = 2 print(\"x: \\(x.val), y: \\(y.val)\") // x: 1, y: 2 1 2 3 4 5 6 7 8 9 10 // 引用类型 class ref_type_data\u003cT\u003e { var val: T init(_ initval: T) { val = initval } } var x = ref_type_data(1) var y = x y.val = 2 print(\"x: \\(x.val), y: \\(y.val)\") // x: 2, y: 2 可以看到，在两份代码中，都是变量y复制自变量x，然后变量y改变内部属性val的值：\n在值类型中，变量y实际上是独立的一份拷贝，不影响变量x的值 在引用类型中，变量y实际上和变量x共用同一份数据实例，因此改变y的同时，也改变了x 通过上面的学习，我们可以为MyState中的_val创建一个存储空间，使得我们在赋值时，不改变_val本身：\n1 2 3 4 class Storage\u003cT\u003e { var val: T init(_ initval: T) { val = initval } } 然后我们让MyState利用这个存储空间：\n1 2 3 4 5 6 7 8 9 10 11 12 13 @propertyWrapper struct MyState\u003cT\u003e { private var storage: Storage\u003cT\u003e init(wrappedValue: T) { storage = Storage(wrappedValue) } var wrappedValue: T { get { return storage.val } nonmutating set { storage.val = newValue } } } 此时，编译成功！\n但是，我们会发现，点击按钮后，界面的文本并没有任何变化。此时如果我们将msgFlag打印出来，可以发现数据确实已经发生了改变，但是SwiftUI并不知道我们改变了数据，因此没有重新绘制界面，因此，接下来的问题变成了：\n如何通知SwiftUI数据已经改变，以引起界面的重新绘制？\n动态属性DynamicProperty 参考官方定义@frozen @propertyWrapper public struct State : DynamicProperty，我们发现为了利用SwiftUI的状态管理能力，我们需要使我们的MyState符合DynamicProperty协议，使得SwiftUI侦听该包装器：\n1 2 3 4 @propertyWrapper struct MyState\u003cT\u003e: DynamicProperty { ... } 但此时我们发现界面仍然不会改变，因为我们需要主动通知SwiftUI数据已发生改变，在本文中，我们使用SwiftUI的自定义状态管理能力ObservableObject：\n1 2 3 4 5 6 7 8 class Storage\u003cT\u003e: ObservableObject { var val: T { willSet { objectWillChange.send() } } init(_ initval: T) { val = initval } } 当我们将要对存储空间中的val赋值时，通过objectWillChange.send()能力来通知SwiftUI准备重新绘制界面。然后，为了新的Storage，我们需要利用SwiftUI的另一个自定义状态管理能力@StateObject：\n1 2 3 4 5 6 7 8 9 10 @propertyWrapper struct MyState\u003cT\u003e: DynamicProperty { @StateObject private var storage: Storage\u003cT\u003e init(wrappedValue: T) { _storage = StateObject(wrappedValue: Storage(wrappedValue)) } ... } 此时我们发现，界面成功刷新了！\n双向绑定Binding 官方的实现中，除了对当前视图的刷新，还支持和子视图之间的双向绑定，我们直接尝试官方操作：\n1 2 3 4 5 6 7 8 9 10 struct MyView: View { ... @MyState private var bindingText: String = \"Hello, World!\" var body: some View { ... Text(\"Binding Test Here: \" + bindingText) TextField(\"Write something\", text: $bindingText) } } 显然这会导致编译错误：\nCompiling failed: cannot find '$bindingText' in scope\n参考官方实现public var projectedValue: Binding { get }，并回顾[@propertyWrapper](#属性包装器Property Wrapper)中的内容，会发现这是因为我们并没有实现MyState的projectedValue属性，因此我们可以进一步利用SwiftUI的自定义状态管理能力，在MyState中定义：\n1 2 3 4 5 6 7 8 9 10 @propertyWrapper struct MyState\u003cT\u003e: DynamicProperty { ... var projectedValue: Binding\u003cT\u003e { Binding( get: { wrappedValue }, set: { wrappedValue = $0 } ) } } 此时我们发现，子视图TextField可以成功改变父视图MyView了！\n至此，我们成功地利用SwiftUI的自定义状态管理能力，构建了一个与官方实现具有相似特性的@State包装器，然而，我们可以发现，我们的定义与官方的定义仍有一定的差别，例如缺少了一个@frozen包装器，这可能是因为官方实现不仅仅实现了界面的刷新，还考虑了性能问题。\n附 完整的示例代码如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 // 存储数据的存储空间 class Storage\u003cT\u003e: ObservableObject { var val: T { willSet { objectWillChange.send() } } init(_ initval: T) { val = initval } } // 自定义的State包装器 @propertyWrapper struct MyState\u003cT\u003e: DynamicProperty { @StateObject private var storage: Storage\u003cT\u003e init(wrappedValue: T) { _storage = StateObject(wrappedValue: Storage(wrappedValue)) } var wrappedValue: T { get { return storage.val } nonmutating set { storage.val = newValue } } var projectedValue: Binding\u003cT\u003e { Binding( get: { wrappedValue }, set: { wrappedValue = $0 } ) } } // 示例界面 struct MyView: View { @MyState private var msgFlag: Bool = true @MyState private var bindingText: String = \"Hello, World!\" var body: some View { Text(msgFlag ? \"Hello, World!\" : \"Hello, Swift!\") Button(\"Click Me\") { if msgFlag { msgFlag = false } else { msgFlag = true } } Text(\"Binding Test Here: \" + bindingText) TextField(\"Write something\", text: $bindingText) } } Reference @State 研究 Swift 5 属性包装器Property Wrappers完整指南 Let’s build @State Swift里的值类型与引用类型 ","wordCount":"3946","inLanguage":"zh","image":"https://weskwong.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E","datePublished":"2024-08-03T11:20:37+08:00","dateModified":"2024-08-03T11:20:37+08:00","author":[{"@type":"Person","name":"WesKwong"}],"mainEntityOfPage":{"@type":"WebPage","@id":"https://weskwong.github.io/zh/posts/swiftui-custom-state-management-build-state-from-scratch/"},"publisher":{"@type":"Organization","name":"WesKwong's Blog","logo":{"@type":"ImageObject","url":"https://weskwong.github.io/images/avatar.png"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://weskwong.github.io/zh/ accesskey=h title="WesKwong的博客 (Alt + H)"><img src=https://weskwong.github.io/images/avatar.png alt aria-label=logo height=35>WesKwong的博客</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button><ul class=lang-switch><li>|</li><li><a href=https://weskwong.github.io/en/ title=English aria-label=English>English</a></li></ul></div></div><ul id=menu><li><a href=https://weskwong.github.io/zh/ title=主页><span>主页</span></a></li><li><a href=https://weskwong.github.io/zh/posts/ title=文章><span>文章</span></a></li><li><a href=https://weskwong.github.io/zh/archives/ title=归档><span>归档</span></a></li><li><a href=https://weskwong.github.io/zh/categories/ title=分类><span>分类</span></a></li><li><a href=https://weskwong.github.io/zh/tags/ title=标签><span>标签</span></a></li><li><a href=https://weskwong.github.io/zh/search/ title="搜索 (Alt + /)" accesskey=/><span>搜索</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://weskwong.github.io/zh/>主页</a>&nbsp;»&nbsp;<a href=https://weskwong.github.io/zh/posts/>文章</a></div><h1 class="post-title entry-hint-parent">SwiftUI自定义状态管理：从头开始构建@State</h1><div class=post-description>通过利用SwiftUI提供的自定义状态管理API，构建一个简易的`@State`，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和`@State`的实现原理。</div><div class=post-meta><span title='2024-08-03 11:20:37 +0800 +0800'>八月 3, 2024</span>&nbsp;·&nbsp;8 分钟&nbsp;·&nbsp;3946 字&nbsp;·&nbsp;WesKwong</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>目录</span></summary><div class=inner><nav id=TableOfContents><ul><li><a href=#属性包装器property-wrapper>属性包装器Property Wrapper</a><ul><li><a href=#使用背景>使用背景</a></li><li><a href=#使用方法>使用方法</a></li><li><a href=#访问包装器实例>访问包装器实例</a></li></ul></li><li><a href=#不可变标记nonmutating>不可变标记nonmutating</a></li><li><a href=#引用类型reference-type>引用类型Reference Type</a></li><li><a href=#动态属性dynamicproperty>动态属性DynamicProperty</a></li><li><a href=#双向绑定binding>双向绑定Binding</a></li><li><a href=#附>附</a></li><li><a href=#reference>Reference</a></li></ul></nav></div></details></div><div class=post-content><p>在SwiftUI状态管理中，<code>@State</code>作为数据源的定义，极为重要，然而SwiftUI作为一个闭源框架，仅对外公开了<code>@State</code>的定义：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-0-1><a class=lnlinks href=#hl-0-1> 1</a>
+</span><span class=lnt id=hl-0-2><a class=lnlinks href=#hl-0-2> 2</a>
+</span><span class=lnt id=hl-0-3><a class=lnlinks href=#hl-0-3> 3</a>
+</span><span class=lnt id=hl-0-4><a class=lnlinks href=#hl-0-4> 4</a>
+</span><span class=lnt id=hl-0-5><a class=lnlinks href=#hl-0-5> 5</a>
+</span><span class=lnt id=hl-0-6><a class=lnlinks href=#hl-0-6> 6</a>
+</span><span class=lnt id=hl-0-7><a class=lnlinks href=#hl-0-7> 7</a>
+</span><span class=lnt id=hl-0-8><a class=lnlinks href=#hl-0-8> 8</a>
+</span><span class=lnt id=hl-0-9><a class=lnlinks href=#hl-0-9> 9</a>
+</span><span class=lnt id=hl-0-10><a class=lnlinks href=#hl-0-10>10</a>
+</span><span class=lnt id=hl-0-11><a class=lnlinks href=#hl-0-11>11</a>
+</span><span class=lnt id=hl-0-12><a class=lnlinks href=#hl-0-12>12</a>
+</span><span class=lnt id=hl-0-13><a class=lnlinks href=#hl-0-13>13</a>
+</span><span class=lnt id=hl-0-14><a class=lnlinks href=#hl-0-14>14</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>frozen</span> <span class=p>@</span><span class=n>propertyWrapper</span> <span class=kd>public</span> <span class=kd>struct</span> <span class=nc>State</span><span class=p>&lt;</span><span class=n>Value</span><span class=p>&gt;</span> <span class=p>:</span> <span class=n>DynamicProperty</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>/// Initialize with the provided initial value.</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span> <span class=n>value</span><span class=p>:</span> <span class=n>Value</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>/// Initialize with the provided initial value.</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kd>init</span><span class=p>(</span><span class=n>initialValue</span> <span class=n>value</span><span class=p>:</span> <span class=n>Value</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>/// The current state value.</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>Value</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>nonmutating</span> <span class=kr>set</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>/// Produces the binding referencing this state value</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kd>var</span> <span class=nv>projectedValue</span><span class=p>:</span> <span class=n>Binding</span><span class=p>&lt;</span><span class=n>Value</span><span class=p>&gt;</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>而没有公开内部的实现，因此本文将通过利用SwiftUI提供的自定义状态管理API，构建一个简易的<code>@State</code>，拥有与官方实现相近的行为，从而初步探究SwiftUI的自定义状态管理能力和<code>@State</code>的实现原理。</p><h2 id=属性包装器property-wrapper>属性包装器Property Wrapper<a hidden class=anchor aria-hidden=true href=#属性包装器property-wrapper>#</a></h2><h3 id=使用背景>使用背景<a hidden class=anchor aria-hidden=true href=#使用背景>#</a></h3><p>为了更好地理解Property Wrapper，假设我们需要向属性添加日志记录的功能：当我们<strong>写入</strong>一个属性时，打印原有的旧值和即将写入的新值：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-1-1><a class=lnlinks href=#hl-1-1> 1</a>
+</span><span class=lnt id=hl-1-2><a class=lnlinks href=#hl-1-2> 2</a>
+</span><span class=lnt id=hl-1-3><a class=lnlinks href=#hl-1-3> 3</a>
+</span><span class=lnt id=hl-1-4><a class=lnlinks href=#hl-1-4> 4</a>
+</span><span class=lnt id=hl-1-5><a class=lnlinks href=#hl-1-5> 5</a>
+</span><span class=lnt id=hl-1-6><a class=lnlinks href=#hl-1-6> 6</a>
+</span><span class=lnt id=hl-1-7><a class=lnlinks href=#hl-1-7> 7</a>
+</span><span class=lnt id=hl-1-8><a class=lnlinks href=#hl-1-8> 8</a>
+</span><span class=lnt id=hl-1-9><a class=lnlinks href=#hl-1-9> 9</a>
+</span><span class=lnt id=hl-1-10><a class=lnlinks href=#hl-1-10>10</a>
+</span><span class=lnt id=hl-1-11><a class=lnlinks href=#hl-1-11>11</a>
+</span><span class=lnt id=hl-1-12><a class=lnlinks href=#hl-1-12>12</a>
+</span><span class=lnt id=hl-1-13><a class=lnlinks href=#hl-1-13>13</a>
+</span><span class=lnt id=hl-1-14><a class=lnlinks href=#hl-1-14>14</a>
+</span><span class=lnt id=hl-1-15><a class=lnlinks href=#hl-1-15>15</a>
+</span><span class=lnt id=hl-1-16><a class=lnlinks href=#hl-1-16>16</a>
+</span><span class=lnt id=hl-1-17><a class=lnlinks href=#hl-1-17>17</a>
+</span><span class=lnt id=hl-1-18><a class=lnlinks href=#hl-1-18>18</a>
+</span><span class=lnt id=hl-1-19><a class=lnlinks href=#hl-1-19>19</a>
+</span><span class=lnt id=hl-1-20><a class=lnlinks href=#hl-1-20>20</a>
+</span><span class=lnt id=hl-1-21><a class=lnlinks href=#hl-1-21>21</a>
+</span><span class=lnt id=hl-1-22><a class=lnlinks href=#hl-1-22>22</a>
+</span><span class=lnt id=hl-1-23><a class=lnlinks href=#hl-1-23>23</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>Storage</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_x</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>x</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_x</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=bp>print</span><span class=p>(</span><span class=s>&#34;Set value: </span><span class=si>\(</span><span class=n>_x</span><span class=si>)</span><span class=s> -&gt; </span><span class=si>\(</span><span class=n>newValue</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>_x</span> <span class=p>=</span> <span class=n>newValue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>storage</span> <span class=p>=</span> <span class=n>Storage</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>10</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cm>/* the app will print:
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 0 -&gt; 1
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 1 -&gt; 10
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 10 -&gt; 100
+</span></span></span><span class=line><span class=cl><span class=cm>*/</span>
+</span></span></code></pre></td></tr></table></div></div><p>当<code>storage</code>中拥有更多的属性时，想要向这些属性添加日志记录功能将会使代码变得十分冗长：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-2-1><a class=lnlinks href=#hl-2-1> 1</a>
+</span><span class=lnt id=hl-2-2><a class=lnlinks href=#hl-2-2> 2</a>
+</span><span class=lnt id=hl-2-3><a class=lnlinks href=#hl-2-3> 3</a>
+</span><span class=lnt id=hl-2-4><a class=lnlinks href=#hl-2-4> 4</a>
+</span><span class=lnt id=hl-2-5><a class=lnlinks href=#hl-2-5> 5</a>
+</span><span class=lnt id=hl-2-6><a class=lnlinks href=#hl-2-6> 6</a>
+</span><span class=lnt id=hl-2-7><a class=lnlinks href=#hl-2-7> 7</a>
+</span><span class=lnt id=hl-2-8><a class=lnlinks href=#hl-2-8> 8</a>
+</span><span class=lnt id=hl-2-9><a class=lnlinks href=#hl-2-9> 9</a>
+</span><span class=lnt id=hl-2-10><a class=lnlinks href=#hl-2-10>10</a>
+</span><span class=lnt id=hl-2-11><a class=lnlinks href=#hl-2-11>11</a>
+</span><span class=lnt id=hl-2-12><a class=lnlinks href=#hl-2-12>12</a>
+</span><span class=lnt id=hl-2-13><a class=lnlinks href=#hl-2-13>13</a>
+</span><span class=lnt id=hl-2-14><a class=lnlinks href=#hl-2-14>14</a>
+</span><span class=lnt id=hl-2-15><a class=lnlinks href=#hl-2-15>15</a>
+</span><span class=lnt id=hl-2-16><a class=lnlinks href=#hl-2-16>16</a>
+</span><span class=lnt id=hl-2-17><a class=lnlinks href=#hl-2-17>17</a>
+</span><span class=lnt id=hl-2-18><a class=lnlinks href=#hl-2-18>18</a>
+</span><span class=lnt id=hl-2-19><a class=lnlinks href=#hl-2-19>19</a>
+</span><span class=lnt id=hl-2-20><a class=lnlinks href=#hl-2-20>20</a>
+</span><span class=lnt id=hl-2-21><a class=lnlinks href=#hl-2-21>21</a>
+</span><span class=lnt id=hl-2-22><a class=lnlinks href=#hl-2-22>22</a>
+</span><span class=lnt id=hl-2-23><a class=lnlinks href=#hl-2-23>23</a>
+</span><span class=lnt id=hl-2-24><a class=lnlinks href=#hl-2-24>24</a>
+</span><span class=lnt id=hl-2-25><a class=lnlinks href=#hl-2-25>25</a>
+</span><span class=lnt id=hl-2-26><a class=lnlinks href=#hl-2-26>26</a>
+</span><span class=lnt id=hl-2-27><a class=lnlinks href=#hl-2-27>27</a>
+</span><span class=lnt id=hl-2-28><a class=lnlinks href=#hl-2-28>28</a>
+</span><span class=lnt id=hl-2-29><a class=lnlinks href=#hl-2-29>29</a>
+</span><span class=lnt id=hl-2-30><a class=lnlinks href=#hl-2-30>30</a>
+</span><span class=lnt id=hl-2-31><a class=lnlinks href=#hl-2-31>31</a>
+</span><span class=lnt id=hl-2-32><a class=lnlinks href=#hl-2-32>32</a>
+</span><span class=lnt id=hl-2-33><a class=lnlinks href=#hl-2-33>33</a>
+</span><span class=lnt id=hl-2-34><a class=lnlinks href=#hl-2-34>34</a>
+</span><span class=lnt id=hl-2-35><a class=lnlinks href=#hl-2-35>35</a>
+</span><span class=lnt id=hl-2-36><a class=lnlinks href=#hl-2-36>36</a>
+</span><span class=lnt id=hl-2-37><a class=lnlinks href=#hl-2-37>37</a>
+</span><span class=lnt id=hl-2-38><a class=lnlinks href=#hl-2-38>38</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>Storage</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_x</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_y</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>x</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_x</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=bp>print</span><span class=p>(</span><span class=s>&#34;Set value: </span><span class=si>\(</span><span class=n>_x</span><span class=si>)</span><span class=s> -&gt; </span><span class=si>\(</span><span class=n>newValue</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>_x</span> <span class=p>=</span> <span class=n>newValue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>y</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_y</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=bp>print</span><span class=p>(</span><span class=s>&#34;Set value: </span><span class=si>\(</span><span class=n>_y</span><span class=si>)</span><span class=s> -&gt; </span><span class=si>\(</span><span class=n>newValue</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>_y</span> <span class=p>=</span> <span class=n>newValue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>storage</span> <span class=p>=</span> <span class=n>Storage</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>10</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>x</span> <span class=p>=</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>y</span> <span class=p>=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>y</span> <span class=p>=</span> <span class=mi>10</span>
+</span></span><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>y</span> <span class=p>=</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cm>/* the app will print:
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 0 -&gt; 1
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 1 -&gt; 10
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 10 -&gt; 100
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 0 -&gt; 1
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 1 -&gt; 10
+</span></span></span><span class=line><span class=cl><span class=cm> Set value: 10 -&gt; 100
+</span></span></span><span class=line><span class=cl><span class=cm>*/</span>
+</span></span></code></pre></td></tr></table></div></div><p>我们可以考虑将这个功能包装成一个新类型，该新类型拥有日志记录功能：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-3-1><a class=lnlinks href=#hl-3-1> 1</a>
+</span><span class=lnt id=hl-3-2><a class=lnlinks href=#hl-3-2> 2</a>
+</span><span class=lnt id=hl-3-3><a class=lnlinks href=#hl-3-3> 3</a>
+</span><span class=lnt id=hl-3-4><a class=lnlinks href=#hl-3-4> 4</a>
+</span><span class=lnt id=hl-3-5><a class=lnlinks href=#hl-3-5> 5</a>
+</span><span class=lnt id=hl-3-6><a class=lnlinks href=#hl-3-6> 6</a>
+</span><span class=lnt id=hl-3-7><a class=lnlinks href=#hl-3-7> 7</a>
+</span><span class=lnt id=hl-3-8><a class=lnlinks href=#hl-3-8> 8</a>
+</span><span class=lnt id=hl-3-9><a class=lnlinks href=#hl-3-9> 9</a>
+</span><span class=lnt id=hl-3-10><a class=lnlinks href=#hl-3-10>10</a>
+</span><span class=lnt id=hl-3-11><a class=lnlinks href=#hl-3-11>11</a>
+</span><span class=lnt id=hl-3-12><a class=lnlinks href=#hl-3-12>12</a>
+</span><span class=lnt id=hl-3-13><a class=lnlinks href=#hl-3-13>13</a>
+</span><span class=lnt id=hl-3-14><a class=lnlinks href=#hl-3-14>14</a>
+</span><span class=lnt id=hl-3-15><a class=lnlinks href=#hl-3-15>15</a>
+</span><span class=lnt id=hl-3-16><a class=lnlinks href=#hl-3-16>16</a>
+</span><span class=lnt id=hl-3-17><a class=lnlinks href=#hl-3-17>17</a>
+</span><span class=lnt id=hl-3-18><a class=lnlinks href=#hl-3-18>18</a>
+</span><span class=lnt id=hl-3-19><a class=lnlinks href=#hl-3-19>19</a>
+</span><span class=lnt id=hl-3-20><a class=lnlinks href=#hl-3-20>20</a>
+</span><span class=lnt id=hl-3-21><a class=lnlinks href=#hl-3-21>21</a>
+</span><span class=lnt id=hl-3-22><a class=lnlinks href=#hl-3-22>22</a>
+</span><span class=lnt id=hl-3-23><a class=lnlinks href=#hl-3-23>23</a>
+</span><span class=lnt id=hl-3-24><a class=lnlinks href=#hl-3-24>24</a>
+</span><span class=lnt id=hl-3-25><a class=lnlinks href=#hl-3-25>25</a>
+</span><span class=lnt id=hl-3-26><a class=lnlinks href=#hl-3-26>26</a>
+</span><span class=lnt id=hl-3-27><a class=lnlinks href=#hl-3-27>27</a>
+</span><span class=lnt id=hl-3-28><a class=lnlinks href=#hl-3-28>28</a>
+</span><span class=lnt id=hl-3-29><a class=lnlinks href=#hl-3-29>29</a>
+</span><span class=lnt id=hl-3-30><a class=lnlinks href=#hl-3-30>30</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>logger</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>val</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>_val</span> <span class=p>=</span> <span class=n>val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=bp>print</span><span class=p>(</span><span class=s>&#34;Set value: </span><span class=si>\(</span><span class=n>_val</span><span class=si>)</span><span class=s> -&gt; </span><span class=si>\(</span><span class=n>newValue</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>_val</span> <span class=p>=</span> <span class=n>newValue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>Storage</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_x</span><span class=p>:</span> <span class=n>logger</span><span class=p>&lt;</span><span class=nb>Int</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>logger</span><span class=p>&lt;</span><span class=nb>Int</span><span class=p>&gt;(</span><span class=n>val</span><span class=p>:</span> <span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_y</span><span class=p>:</span> <span class=n>logger</span><span class=p>&lt;</span><span class=nb>Int</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>logger</span><span class=p>&lt;</span><span class=nb>Int</span><span class=p>&gt;(</span><span class=n>val</span><span class=p>:</span> <span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>x</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_x</span><span class=p>.</span><span class=n>val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span> <span class=n>_x</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>y</span><span class=p>:</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_y</span><span class=p>.</span><span class=n>val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span> <span class=n>_y</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cm>/* The rest remains unchanged... */</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=使用方法>使用方法<a hidden class=anchor aria-hidden=true href=#使用方法>#</a></h3><p>然而，这样的写法依然非常冗长，Swift 5提供了一个新特性Property Wrapper，他可以使得自定义的新类型成为一个自定义的新属性包装器：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-4-1><a class=lnlinks href=#hl-4-1> 1</a>
+</span><span class=lnt id=hl-4-2><a class=lnlinks href=#hl-4-2> 2</a>
+</span><span class=lnt id=hl-4-3><a class=lnlinks href=#hl-4-3> 3</a>
+</span><span class=lnt id=hl-4-4><a class=lnlinks href=#hl-4-4> 4</a>
+</span><span class=lnt id=hl-4-5><a class=lnlinks href=#hl-4-5> 5</a>
+</span><span class=lnt id=hl-4-6><a class=lnlinks href=#hl-4-6> 6</a>
+</span><span class=lnt id=hl-4-7><a class=lnlinks href=#hl-4-7> 7</a>
+</span><span class=lnt id=hl-4-8><a class=lnlinks href=#hl-4-8> 8</a>
+</span><span class=lnt id=hl-4-9><a class=lnlinks href=#hl-4-9> 9</a>
+</span><span class=lnt id=hl-4-10><a class=lnlinks href=#hl-4-10>10</a>
+</span><span class=lnt id=hl-4-11><a class=lnlinks href=#hl-4-11>11</a>
+</span><span class=lnt id=hl-4-12><a class=lnlinks href=#hl-4-12>12</a>
+</span><span class=lnt id=hl-4-13><a class=lnlinks href=#hl-4-13>13</a>
+</span><span class=lnt id=hl-4-14><a class=lnlinks href=#hl-4-14>14</a>
+</span><span class=lnt id=hl-4-15><a class=lnlinks href=#hl-4-15>15</a>
+</span><span class=lnt id=hl-4-16><a class=lnlinks href=#hl-4-16>16</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>logger</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>_val</span> <span class=p>=</span> <span class=n>wrappedValue</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=bp>print</span><span class=p>(</span><span class=s>&#34;Set value: </span><span class=si>\(</span><span class=n>_val</span><span class=si>)</span><span class=s> -&gt; </span><span class=si>\(</span><span class=n>newValue</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>_val</span> <span class=p>=</span> <span class=n>newValue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>由<code>@propertyWrapper</code>包装的新类型必须具有<code>wrappedValue</code>属性，被这个新包装器包装的属性，将会被存储到包装器内部的<code>_val</code>中，而向外表现出来的行为，例如<code>get</code>和<code>set</code>，将会被<code>wrappedValue</code>所代理：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-5-1><a class=lnlinks href=#hl-5-1>1</a>
+</span><span class=lnt id=hl-5-2><a class=lnlinks href=#hl-5-2>2</a>
+</span><span class=lnt id=hl-5-3><a class=lnlinks href=#hl-5-3>3</a>
+</span><span class=lnt id=hl-5-4><a class=lnlinks href=#hl-5-4>4</a>
+</span><span class=lnt id=hl-5-5><a class=lnlinks href=#hl-5-5>5</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>Storage</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  	<span class=c1>// @propertyWrapper 具有两种初始化的方法：</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>logger</span> <span class=kd>var</span> <span class=nv>x</span> <span class=p>=</span> <span class=mi>0</span> <span class=c1>// 由编译器隐式调用`init(wrappedValue: T)`</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>logger</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=mi>0</span><span class=p>)</span> <span class=kd>var</span> <span class=nv>y</span> <span class=c1>// 显式指定wrappedValue初始化值</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>可以看到，<code>@propertyWrapper</code>帮助我们将冗长的逻辑缩短为仅需额外使用一个包装器符号即可。</p><h3 id=访问包装器实例>访问包装器实例<a hidden class=anchor aria-hidden=true href=#访问包装器实例>#</a></h3><p>除此之外，包装器内还可以定义一些额外的工具函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-6-1><a class=lnlinks href=#hl-6-1> 1</a>
+</span><span class=lnt id=hl-6-2><a class=lnlinks href=#hl-6-2> 2</a>
+</span><span class=lnt id=hl-6-3><a class=lnlinks href=#hl-6-3> 3</a>
+</span><span class=lnt id=hl-6-4><a class=lnlinks href=#hl-6-4> 4</a>
+</span><span class=lnt id=hl-6-5><a class=lnlinks href=#hl-6-5> 5</a>
+</span><span class=lnt id=hl-6-6><a class=lnlinks href=#hl-6-6> 6</a>
+</span><span class=lnt id=hl-6-7><a class=lnlinks href=#hl-6-7> 7</a>
+</span><span class=lnt id=hl-6-8><a class=lnlinks href=#hl-6-8> 8</a>
+</span><span class=lnt id=hl-6-9><a class=lnlinks href=#hl-6-9> 9</a>
+</span><span class=lnt id=hl-6-10><a class=lnlinks href=#hl-6-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>logger</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* ... */</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span> <span class=cm>/* ... */</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>greet</span><span class=p>()</span> <span class=p>{</span> <span class=bp>print</span><span class=p>(</span><span class=s>&#34;I&#39;m a logger!&#34;</span><span class=p>)</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>在变量名前添加下划线<code>_</code>为包装器实例，通过访问包装器实例，我们可以调用包装器中定义的工具函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-7-1><a class=lnlinks href=#hl-7-1>1</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=n>_x</span><span class=p>.</span><span class=n>greet</span><span class=p>()</span>
+</span></span></code></pre></td></tr></table></div></div><p>但是直接从外部调用会产生编译错误：</p><p><code>error: '_x' is inaccessible due to 'private' protection level</code></p><p>这是因为包装器实例默认为<code>private</code>属性，我们可以通过<code>projectedValue</code>来访问公开更多对外的API，从而实现访问包装器实例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-8-1><a class=lnlinks href=#hl-8-1> 1</a>
+</span><span class=lnt id=hl-8-2><a class=lnlinks href=#hl-8-2> 2</a>
+</span><span class=lnt id=hl-8-3><a class=lnlinks href=#hl-8-3> 3</a>
+</span><span class=lnt id=hl-8-4><a class=lnlinks href=#hl-8-4> 4</a>
+</span><span class=lnt id=hl-8-5><a class=lnlinks href=#hl-8-5> 5</a>
+</span><span class=lnt id=hl-8-6><a class=lnlinks href=#hl-8-6> 6</a>
+</span><span class=lnt id=hl-8-7><a class=lnlinks href=#hl-8-7> 7</a>
+</span><span class=lnt id=hl-8-8><a class=lnlinks href=#hl-8-8> 8</a>
+</span><span class=lnt id=hl-8-9><a class=lnlinks href=#hl-8-9> 9</a>
+</span><span class=lnt id=hl-8-10><a class=lnlinks href=#hl-8-10>10</a>
+</span><span class=lnt id=hl-8-11><a class=lnlinks href=#hl-8-11>11</a>
+</span><span class=lnt id=hl-8-12><a class=lnlinks href=#hl-8-12>12</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>logger</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* ... */</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span> <span class=cm>/* ... */</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>projectedValue</span><span class=p>:</span> <span class=n>logger</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span> <span class=k>return</span> <span class=kc>self</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  	<span class=kd>func</span> <span class=nf>greet</span><span class=p>()</span> <span class=p>{</span> <span class=cm>/* ... */</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>此时我们可以通过Swift提供的语法糖访问<code>projectedValue</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-9-1><a class=lnlinks href=#hl-9-1>1</a>
+</span><span class=lnt id=hl-9-2><a class=lnlinks href=#hl-9-2>2</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=n>storage</span><span class=p>.</span><span class=err>$</span><span class=n>x</span><span class=p>.</span><span class=n>greet</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=c1>// I&#39;m a logger!</span>
+</span></span></code></pre></td></tr></table></div></div><p>经过上面的学习，我们可以开始尝试动手构建<code>@State</code>了，参考官方定义，我们可以尝试简单地定义包装器<code>@MyState</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-10-1><a class=lnlinks href=#hl-10-1> 1</a>
+</span><span class=lnt id=hl-10-2><a class=lnlinks href=#hl-10-2> 2</a>
+</span><span class=lnt id=hl-10-3><a class=lnlinks href=#hl-10-3> 3</a>
+</span><span class=lnt id=hl-10-4><a class=lnlinks href=#hl-10-4> 4</a>
+</span><span class=lnt id=hl-10-5><a class=lnlinks href=#hl-10-5> 5</a>
+</span><span class=lnt id=hl-10-6><a class=lnlinks href=#hl-10-6> 6</a>
+</span><span class=lnt id=hl-10-7><a class=lnlinks href=#hl-10-7> 7</a>
+</span><span class=lnt id=hl-10-8><a class=lnlinks href=#hl-10-8> 8</a>
+</span><span class=lnt id=hl-10-9><a class=lnlinks href=#hl-10-9> 9</a>
+</span><span class=lnt id=hl-10-10><a class=lnlinks href=#hl-10-10>10</a>
+</span><span class=lnt id=hl-10-11><a class=lnlinks href=#hl-10-11>11</a>
+</span><span class=lnt id=hl-10-12><a class=lnlinks href=#hl-10-12>12</a>
+</span><span class=lnt id=hl-10-13><a class=lnlinks href=#hl-10-13>13</a>
+</span><span class=lnt id=hl-10-14><a class=lnlinks href=#hl-10-14>14</a>
+</span><span class=lnt id=hl-10-15><a class=lnlinks href=#hl-10-15>15</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>import</span> <span class=nc>SwiftUI</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>_val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>_val</span> <span class=p>=</span> <span class=n>wrappedValue</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>_val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>set</span> <span class=p>{</span> <span class=n>_val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>然后使用我们定义好的<code>@MyState</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-11-1><a class=lnlinks href=#hl-11-1> 1</a>
+</span><span class=lnt id=hl-11-2><a class=lnlinks href=#hl-11-2> 2</a>
+</span><span class=lnt id=hl-11-3><a class=lnlinks href=#hl-11-3> 3</a>
+</span><span class=lnt id=hl-11-4><a class=lnlinks href=#hl-11-4> 4</a>
+</span><span class=lnt id=hl-11-5><a class=lnlinks href=#hl-11-5> 5</a>
+</span><span class=lnt id=hl-11-6><a class=lnlinks href=#hl-11-6> 6</a>
+</span><span class=lnt id=hl-11-7><a class=lnlinks href=#hl-11-7> 7</a>
+</span><span class=lnt id=hl-11-8><a class=lnlinks href=#hl-11-8> 8</a>
+</span><span class=lnt id=hl-11-9><a class=lnlinks href=#hl-11-9> 9</a>
+</span><span class=lnt id=hl-11-10><a class=lnlinks href=#hl-11-10>10</a>
+</span><span class=lnt id=hl-11-11><a class=lnlinks href=#hl-11-11>11</a>
+</span><span class=lnt id=hl-11-12><a class=lnlinks href=#hl-11-12>12</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyView</span><span class=p>:</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>MyState</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>msgFlag</span><span class=p>:</span> <span class=nb>Bool</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>body</span><span class=p>:</span> <span class=n>some</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Text</span><span class=p>(</span><span class=n>msgFlag</span> <span class=p>?</span> <span class=s>&#34;Hello, World!&#34;</span> <span class=p>:</span> <span class=s>&#34;Hello, Swift!&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=n>Button</span><span class=p>(</span><span class=s>&#34;Click Me&#34;</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=n>msgFlag</span> <span class=p>{</span> <span class=n>msgFlag</span> <span class=p>=</span> <span class=kc>false</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=k>else</span> <span class=p>{</span> <span class=n>msgFlag</span> <span class=p>=</span> <span class=kc>true</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>然而，此时会产生编译报错：</p><p><code>error: cannot assign to property: 'self' is immutable</code></p><p>这个报错的原因是结构体<code>MyView</code>是不可变的，属性<code>msgFlag</code>（<code>MyState</code>包装器实例）属于<code>MyView</code>，然而我们的操作<code>msgFlag = false</code>会改变<code>msgFlag</code>，即改变了<code>MyState</code>实例，从而改变了<code>MyView</code>。</p><h2 id=不可变标记nonmutating>不可变标记nonmutating<a hidden class=anchor aria-hidden=true href=#不可变标记nonmutating>#</a></h2><p>参考官方定义<code>public var wrappedValue: Value { get nonmutating set }</code>，我们发现需要在<code>wrappedValue</code>中加入<strong>不可变标记<code>nonmutating</code></strong>，使得<code>MyState</code>实例向<code>MyView</code>承诺，向自己的赋值操作不会改变自己：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-12-1><a class=lnlinks href=#hl-12-1>1</a>
+</span><span class=lnt id=hl-12-2><a class=lnlinks href=#hl-12-2>2</a>
+</span><span class=lnt id=hl-12-3><a class=lnlinks href=#hl-12-3>3</a>
+</span><span class=lnt id=hl-12-4><a class=lnlinks href=#hl-12-4>4</a>
+</span><span class=lnt id=hl-12-5><a class=lnlinks href=#hl-12-5>5</a>
+</span><span class=lnt id=hl-12-6><a class=lnlinks href=#hl-12-6>6</a>
+</span><span class=lnt id=hl-12-7><a class=lnlinks href=#hl-12-7>7</a>
+</span><span class=lnt id=hl-12-8><a class=lnlinks href=#hl-12-8>8</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=p>...</span>
+</span></span><span class=line><span class=cl>        <span class=kr>nonmutating</span> <span class=kr>set</span> <span class=p>{</span> <span class=n>_val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>此时，编译错误的定位位置从<code>MyView</code>的<code>msgFlag = false</code>处移动到了<code>MyState</code>的<code>_val = newValue</code>处，因为虽然<code>MyState</code>对外承诺不会改变自己，但是实际上却对自身内部属性<code>_val</code>执行了赋值操作。</p><p>虽然我们此时仍未能编译成功，但是我们将问题变成了：</p><p><strong>如何在赋值时不改变<code>_val</code>属性？</strong></p><h2 id=引用类型reference-type>引用类型Reference Type<a hidden class=anchor aria-hidden=true href=#引用类型reference-type>#</a></h2><p>为了解决这个问题，我们很容易联想到C语言中的<strong>指针类型</strong>，即结构体内只保存指向属性实际存储地址的指针，在赋值的时候，我们改变的是实际存储地址中的值，而结构体本身的指针并不会改变。</p><p>在Swift中，数据类型分为两种：</p><ul><li><strong>值类型(Value Types)</strong>：每个实例保留一份独有的数据拷贝，一般以结构体<code>struct</code>、枚举<code>enum</code> 或者元组<code>tuple</code>的形式出现。</li><li><strong>引用类型(Reference Type)</strong>：每个实例共享同一份数据来源，一般以类<code>class</code>的形式出现。</li></ul><p>两种类型的区别如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-13-1><a class=lnlinks href=#hl-13-1> 1</a>
+</span><span class=lnt id=hl-13-2><a class=lnlinks href=#hl-13-2> 2</a>
+</span><span class=lnt id=hl-13-3><a class=lnlinks href=#hl-13-3> 3</a>
+</span><span class=lnt id=hl-13-4><a class=lnlinks href=#hl-13-4> 4</a>
+</span><span class=lnt id=hl-13-5><a class=lnlinks href=#hl-13-5> 5</a>
+</span><span class=lnt id=hl-13-6><a class=lnlinks href=#hl-13-6> 6</a>
+</span><span class=lnt id=hl-13-7><a class=lnlinks href=#hl-13-7> 7</a>
+</span><span class=lnt id=hl-13-8><a class=lnlinks href=#hl-13-8> 8</a>
+</span><span class=lnt id=hl-13-9><a class=lnlinks href=#hl-13-9> 9</a>
+</span><span class=lnt id=hl-13-10><a class=lnlinks href=#hl-13-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// 值类型</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>val_type_data</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>      <span class=kd>init</span><span class=p>(</span><span class=kc>_</span> <span class=n>initval</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>val</span> <span class=p>=</span> <span class=n>initval</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>x</span> <span class=p>=</span> <span class=n>val_type_data</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>y</span> <span class=p>=</span> <span class=n>x</span>
+</span></span><span class=line><span class=cl><span class=n>y</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=mi>2</span>
+</span></span><span class=line><span class=cl><span class=bp>print</span><span class=p>(</span><span class=s>&#34;x: </span><span class=si>\(</span><span class=n>x</span><span class=p>.</span><span class=n>val</span><span class=si>)</span><span class=s>, y: </span><span class=si>\(</span><span class=n>y</span><span class=p>.</span><span class=n>val</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=c1>// x: 1, y: 2</span>
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-14-1><a class=lnlinks href=#hl-14-1> 1</a>
+</span><span class=lnt id=hl-14-2><a class=lnlinks href=#hl-14-2> 2</a>
+</span><span class=lnt id=hl-14-3><a class=lnlinks href=#hl-14-3> 3</a>
+</span><span class=lnt id=hl-14-4><a class=lnlinks href=#hl-14-4> 4</a>
+</span><span class=lnt id=hl-14-5><a class=lnlinks href=#hl-14-5> 5</a>
+</span><span class=lnt id=hl-14-6><a class=lnlinks href=#hl-14-6> 6</a>
+</span><span class=lnt id=hl-14-7><a class=lnlinks href=#hl-14-7> 7</a>
+</span><span class=lnt id=hl-14-8><a class=lnlinks href=#hl-14-8> 8</a>
+</span><span class=lnt id=hl-14-9><a class=lnlinks href=#hl-14-9> 9</a>
+</span><span class=lnt id=hl-14-10><a class=lnlinks href=#hl-14-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// 引用类型</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>ref_type_data</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  	<span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>  	<span class=kd>init</span><span class=p>(</span><span class=kc>_</span> <span class=n>initval</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>val</span> <span class=p>=</span> <span class=n>initval</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>x</span> <span class=p>=</span> <span class=n>ref_type_data</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>y</span> <span class=p>=</span> <span class=n>x</span>
+</span></span><span class=line><span class=cl><span class=n>y</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=mi>2</span>
+</span></span><span class=line><span class=cl><span class=bp>print</span><span class=p>(</span><span class=s>&#34;x: </span><span class=si>\(</span><span class=n>x</span><span class=p>.</span><span class=n>val</span><span class=si>)</span><span class=s>, y: </span><span class=si>\(</span><span class=n>y</span><span class=p>.</span><span class=n>val</span><span class=si>)</span><span class=s>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=c1>// x: 2, y: 2</span>
+</span></span></code></pre></td></tr></table></div></div><p>可以看到，在两份代码中，都是变量<code>y</code>复制自变量<code>x</code>，然后变量<code>y</code>改变内部属性<code>val</code>的值：</p><ul><li>在值类型中，变量<code>y</code>实际上是独立的一份拷贝，不影响变量<code>x</code>的值</li><li>在引用类型中，变量<code>y</code>实际上和变量<code>x</code>共用同一份数据实例，因此改变<code>y</code>的同时，也改变了<code>x</code></li></ul><p>通过上面的学习，我们可以为<code>MyState</code>中的<code>_val</code><strong>创建一个存储空间</strong>，使得我们在赋值时，不改变<code>_val</code>本身：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-15-1><a class=lnlinks href=#hl-15-1>1</a>
+</span><span class=lnt id=hl-15-2><a class=lnlinks href=#hl-15-2>2</a>
+</span><span class=lnt id=hl-15-3><a class=lnlinks href=#hl-15-3>3</a>
+</span><span class=lnt id=hl-15-4><a class=lnlinks href=#hl-15-4>4</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>class</span> <span class=nc>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  	<span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span>
+</span></span><span class=line><span class=cl>  	<span class=kd>init</span><span class=p>(</span><span class=kc>_</span> <span class=n>initval</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>val</span> <span class=p>=</span> <span class=n>initval</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>然后我们让<code>MyState</code>利用这个<strong>存储空间</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-16-1><a class=lnlinks href=#hl-16-1> 1</a>
+</span><span class=lnt id=hl-16-2><a class=lnlinks href=#hl-16-2> 2</a>
+</span><span class=lnt id=hl-16-3><a class=lnlinks href=#hl-16-3> 3</a>
+</span><span class=lnt id=hl-16-4><a class=lnlinks href=#hl-16-4> 4</a>
+</span><span class=lnt id=hl-16-5><a class=lnlinks href=#hl-16-5> 5</a>
+</span><span class=lnt id=hl-16-6><a class=lnlinks href=#hl-16-6> 6</a>
+</span><span class=lnt id=hl-16-7><a class=lnlinks href=#hl-16-7> 7</a>
+</span><span class=lnt id=hl-16-8><a class=lnlinks href=#hl-16-8> 8</a>
+</span><span class=lnt id=hl-16-9><a class=lnlinks href=#hl-16-9> 9</a>
+</span><span class=lnt id=hl-16-10><a class=lnlinks href=#hl-16-10>10</a>
+</span><span class=lnt id=hl-16-11><a class=lnlinks href=#hl-16-11>11</a>
+</span><span class=lnt id=hl-16-12><a class=lnlinks href=#hl-16-12>12</a>
+</span><span class=lnt id=hl-16-13><a class=lnlinks href=#hl-16-13>13</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>var</span> <span class=nv>storage</span><span class=p>:</span> <span class=n>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>storage</span> <span class=p>=</span> <span class=n>Storage</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>storage</span><span class=p>.</span><span class=n>val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>nonmutating</span> <span class=kr>set</span> <span class=p>{</span> <span class=n>storage</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>此时，编译成功！</strong></p><p>但是，我们会发现，点击按钮后，<strong>界面的文本并没有任何变化</strong>。此时如果我们将<code>msgFlag</code>打印出来，可以发现数据确实已经发生了改变，但是SwiftUI并不知道我们改变了数据，因此没有重新绘制界面，因此，接下来的问题变成了：</p><p><strong>如何通知SwiftUI数据已经改变，以引起界面的重新绘制？</strong></p><h2 id=动态属性dynamicproperty>动态属性DynamicProperty<a hidden class=anchor aria-hidden=true href=#动态属性dynamicproperty>#</a></h2><p>参考官方定义<code>@frozen @propertyWrapper public struct State&lt;Value> : DynamicProperty</code>，我们发现为了利用SwiftUI的状态管理能力，我们需要使我们的<code>MyState</code>符合<code>DynamicProperty</code>协议，使得SwiftUI侦听该包装器：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-17-1><a class=lnlinks href=#hl-17-1>1</a>
+</span><span class=lnt id=hl-17-2><a class=lnlinks href=#hl-17-2>2</a>
+</span><span class=lnt id=hl-17-3><a class=lnlinks href=#hl-17-3>3</a>
+</span><span class=lnt id=hl-17-4><a class=lnlinks href=#hl-17-4>4</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>DynamicProperty</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>但此时我们发现界面仍然不会改变，因为我们需要主动通知SwiftUI数据已发生改变，在本文中，我们使用SwiftUI的自定义状态管理能力<code>ObservableObject</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-18-1><a class=lnlinks href=#hl-18-1>1</a>
+</span><span class=lnt id=hl-18-2><a class=lnlinks href=#hl-18-2>2</a>
+</span><span class=lnt id=hl-18-3><a class=lnlinks href=#hl-18-3>3</a>
+</span><span class=lnt id=hl-18-4><a class=lnlinks href=#hl-18-4>4</a>
+</span><span class=lnt id=hl-18-5><a class=lnlinks href=#hl-18-5>5</a>
+</span><span class=lnt id=hl-18-6><a class=lnlinks href=#hl-18-6>6</a>
+</span><span class=lnt id=hl-18-7><a class=lnlinks href=#hl-18-7>7</a>
+</span><span class=lnt id=hl-18-8><a class=lnlinks href=#hl-18-8>8</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>class</span> <span class=nc>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>willSet</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>objectWillChange</span><span class=p>.</span><span class=n>send</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=kc>_</span> <span class=n>initval</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>val</span> <span class=p>=</span> <span class=n>initval</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>当我们将要对存储空间中的<code>val</code>赋值时，通过<code>objectWillChange.send()</code>能力来通知SwiftUI准备重新绘制界面。然后，为了新的<code>Storage</code>，我们需要利用SwiftUI的另一个自定义状态管理能力<code>@StateObject</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-19-1><a class=lnlinks href=#hl-19-1> 1</a>
+</span><span class=lnt id=hl-19-2><a class=lnlinks href=#hl-19-2> 2</a>
+</span><span class=lnt id=hl-19-3><a class=lnlinks href=#hl-19-3> 3</a>
+</span><span class=lnt id=hl-19-4><a class=lnlinks href=#hl-19-4> 4</a>
+</span><span class=lnt id=hl-19-5><a class=lnlinks href=#hl-19-5> 5</a>
+</span><span class=lnt id=hl-19-6><a class=lnlinks href=#hl-19-6> 6</a>
+</span><span class=lnt id=hl-19-7><a class=lnlinks href=#hl-19-7> 7</a>
+</span><span class=lnt id=hl-19-8><a class=lnlinks href=#hl-19-8> 8</a>
+</span><span class=lnt id=hl-19-9><a class=lnlinks href=#hl-19-9> 9</a>
+</span><span class=lnt id=hl-19-10><a class=lnlinks href=#hl-19-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>DynamicProperty</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>StateObject</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>storage</span><span class=p>:</span> <span class=n>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>_storage</span> <span class=p>=</span> <span class=n>StateObject</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>Storage</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  	<span class=p>...</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>此时我们发现，界面成功刷新了！</strong></p><h2 id=双向绑定binding>双向绑定Binding<a hidden class=anchor aria-hidden=true href=#双向绑定binding>#</a></h2><p>官方的实现中，除了对当前视图的刷新，还支持和子视图之间的双向绑定，我们直接尝试官方操作：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-20-1><a class=lnlinks href=#hl-20-1> 1</a>
+</span><span class=lnt id=hl-20-2><a class=lnlinks href=#hl-20-2> 2</a>
+</span><span class=lnt id=hl-20-3><a class=lnlinks href=#hl-20-3> 3</a>
+</span><span class=lnt id=hl-20-4><a class=lnlinks href=#hl-20-4> 4</a>
+</span><span class=lnt id=hl-20-5><a class=lnlinks href=#hl-20-5> 5</a>
+</span><span class=lnt id=hl-20-6><a class=lnlinks href=#hl-20-6> 6</a>
+</span><span class=lnt id=hl-20-7><a class=lnlinks href=#hl-20-7> 7</a>
+</span><span class=lnt id=hl-20-8><a class=lnlinks href=#hl-20-8> 8</a>
+</span><span class=lnt id=hl-20-9><a class=lnlinks href=#hl-20-9> 9</a>
+</span><span class=lnt id=hl-20-10><a class=lnlinks href=#hl-20-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyView</span><span class=p>:</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>MyState</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>bindingText</span><span class=p>:</span> <span class=nb>String</span> <span class=p>=</span> <span class=s>&#34;Hello, World!&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>body</span><span class=p>:</span> <span class=n>some</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=p>...</span>
+</span></span><span class=line><span class=cl>        <span class=n>Text</span><span class=p>(</span><span class=s>&#34;Binding Test Here: &#34;</span> <span class=o>+</span> <span class=n>bindingText</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>TextField</span><span class=p>(</span><span class=s>&#34;Write something&#34;</span><span class=p>,</span> <span class=n>text</span><span class=p>:</span> <span class=err>$</span><span class=n>bindingText</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>显然这会导致编译错误：</p><p><code>Compiling failed: cannot find '$bindingText' in scope</code></p><p>参考官方实现<code>public var projectedValue: Binding&lt;Value> { get }</code>，并回顾[@propertyWrapper](#属性包装器Property Wrapper)中的内容，会发现这是因为我们并没有实现<code>MyState</code>的<code>projectedValue</code>属性，因此我们可以进一步利用SwiftUI的自定义状态管理能力，在<code>MyState</code>中定义：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-21-1><a class=lnlinks href=#hl-21-1> 1</a>
+</span><span class=lnt id=hl-21-2><a class=lnlinks href=#hl-21-2> 2</a>
+</span><span class=lnt id=hl-21-3><a class=lnlinks href=#hl-21-3> 3</a>
+</span><span class=lnt id=hl-21-4><a class=lnlinks href=#hl-21-4> 4</a>
+</span><span class=lnt id=hl-21-5><a class=lnlinks href=#hl-21-5> 5</a>
+</span><span class=lnt id=hl-21-6><a class=lnlinks href=#hl-21-6> 6</a>
+</span><span class=lnt id=hl-21-7><a class=lnlinks href=#hl-21-7> 7</a>
+</span><span class=lnt id=hl-21-8><a class=lnlinks href=#hl-21-8> 8</a>
+</span><span class=lnt id=hl-21-9><a class=lnlinks href=#hl-21-9> 9</a>
+</span><span class=lnt id=hl-21-10><a class=lnlinks href=#hl-21-10>10</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>DynamicProperty</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>projectedValue</span><span class=p>:</span> <span class=n>Binding</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Binding</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>          <span class=kr>get</span><span class=p>:</span> <span class=p>{</span> <span class=n>wrappedValue</span> <span class=p>},</span>
+</span></span><span class=line><span class=cl>          <span class=kr>set</span><span class=p>:</span> <span class=p>{</span> <span class=n>wrappedValue</span> <span class=p>=</span> <span class=nv>$0</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>此时我们发现，子视图<code>TextField</code>可以成功改变父视图<code>MyView</code>了！</strong></p><p>至此，我们成功地利用SwiftUI的自定义状态管理能力，构建了一个与官方实现具有相似特性的<code>@State</code>包装器，然而，我们可以发现，我们的定义与官方的定义仍有一定的差别，例如缺少了一个<code>@frozen</code>包装器，这可能是因为官方实现不仅仅实现了界面的刷新，还考虑了性能问题。</p><h2 id=附>附<a hidden class=anchor aria-hidden=true href=#附>#</a></h2><p>完整的示例代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt id=hl-22-1><a class=lnlinks href=#hl-22-1> 1</a>
+</span><span class=lnt id=hl-22-2><a class=lnlinks href=#hl-22-2> 2</a>
+</span><span class=lnt id=hl-22-3><a class=lnlinks href=#hl-22-3> 3</a>
+</span><span class=lnt id=hl-22-4><a class=lnlinks href=#hl-22-4> 4</a>
+</span><span class=lnt id=hl-22-5><a class=lnlinks href=#hl-22-5> 5</a>
+</span><span class=lnt id=hl-22-6><a class=lnlinks href=#hl-22-6> 6</a>
+</span><span class=lnt id=hl-22-7><a class=lnlinks href=#hl-22-7> 7</a>
+</span><span class=lnt id=hl-22-8><a class=lnlinks href=#hl-22-8> 8</a>
+</span><span class=lnt id=hl-22-9><a class=lnlinks href=#hl-22-9> 9</a>
+</span><span class=lnt id=hl-22-10><a class=lnlinks href=#hl-22-10>10</a>
+</span><span class=lnt id=hl-22-11><a class=lnlinks href=#hl-22-11>11</a>
+</span><span class=lnt id=hl-22-12><a class=lnlinks href=#hl-22-12>12</a>
+</span><span class=lnt id=hl-22-13><a class=lnlinks href=#hl-22-13>13</a>
+</span><span class=lnt id=hl-22-14><a class=lnlinks href=#hl-22-14>14</a>
+</span><span class=lnt id=hl-22-15><a class=lnlinks href=#hl-22-15>15</a>
+</span><span class=lnt id=hl-22-16><a class=lnlinks href=#hl-22-16>16</a>
+</span><span class=lnt id=hl-22-17><a class=lnlinks href=#hl-22-17>17</a>
+</span><span class=lnt id=hl-22-18><a class=lnlinks href=#hl-22-18>18</a>
+</span><span class=lnt id=hl-22-19><a class=lnlinks href=#hl-22-19>19</a>
+</span><span class=lnt id=hl-22-20><a class=lnlinks href=#hl-22-20>20</a>
+</span><span class=lnt id=hl-22-21><a class=lnlinks href=#hl-22-21>21</a>
+</span><span class=lnt id=hl-22-22><a class=lnlinks href=#hl-22-22>22</a>
+</span><span class=lnt id=hl-22-23><a class=lnlinks href=#hl-22-23>23</a>
+</span><span class=lnt id=hl-22-24><a class=lnlinks href=#hl-22-24>24</a>
+</span><span class=lnt id=hl-22-25><a class=lnlinks href=#hl-22-25>25</a>
+</span><span class=lnt id=hl-22-26><a class=lnlinks href=#hl-22-26>26</a>
+</span><span class=lnt id=hl-22-27><a class=lnlinks href=#hl-22-27>27</a>
+</span><span class=lnt id=hl-22-28><a class=lnlinks href=#hl-22-28>28</a>
+</span><span class=lnt id=hl-22-29><a class=lnlinks href=#hl-22-29>29</a>
+</span><span class=lnt id=hl-22-30><a class=lnlinks href=#hl-22-30>30</a>
+</span><span class=lnt id=hl-22-31><a class=lnlinks href=#hl-22-31>31</a>
+</span><span class=lnt id=hl-22-32><a class=lnlinks href=#hl-22-32>32</a>
+</span><span class=lnt id=hl-22-33><a class=lnlinks href=#hl-22-33>33</a>
+</span><span class=lnt id=hl-22-34><a class=lnlinks href=#hl-22-34>34</a>
+</span><span class=lnt id=hl-22-35><a class=lnlinks href=#hl-22-35>35</a>
+</span><span class=lnt id=hl-22-36><a class=lnlinks href=#hl-22-36>36</a>
+</span><span class=lnt id=hl-22-37><a class=lnlinks href=#hl-22-37>37</a>
+</span><span class=lnt id=hl-22-38><a class=lnlinks href=#hl-22-38>38</a>
+</span><span class=lnt id=hl-22-39><a class=lnlinks href=#hl-22-39>39</a>
+</span><span class=lnt id=hl-22-40><a class=lnlinks href=#hl-22-40>40</a>
+</span><span class=lnt id=hl-22-41><a class=lnlinks href=#hl-22-41>41</a>
+</span><span class=lnt id=hl-22-42><a class=lnlinks href=#hl-22-42>42</a>
+</span><span class=lnt id=hl-22-43><a class=lnlinks href=#hl-22-43>43</a>
+</span><span class=lnt id=hl-22-44><a class=lnlinks href=#hl-22-44>44</a>
+</span><span class=lnt id=hl-22-45><a class=lnlinks href=#hl-22-45>45</a>
+</span><span class=lnt id=hl-22-46><a class=lnlinks href=#hl-22-46>46</a>
+</span><span class=lnt id=hl-22-47><a class=lnlinks href=#hl-22-47>47</a>
+</span><span class=lnt id=hl-22-48><a class=lnlinks href=#hl-22-48>48</a>
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// 存储数据的存储空间</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>val</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>willSet</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>objectWillChange</span><span class=p>.</span><span class=n>send</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=kc>_</span> <span class=n>initval</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span> <span class=n>val</span> <span class=p>=</span> <span class=n>initval</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 自定义的State包装器</span>
+</span></span><span class=line><span class=cl><span class=p>@</span><span class=n>propertyWrapper</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyState</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;:</span> <span class=n>DynamicProperty</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>StateObject</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>storage</span><span class=p>:</span> <span class=n>Storage</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>_storage</span> <span class=p>=</span> <span class=n>StateObject</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>:</span> <span class=n>Storage</span><span class=p>(</span><span class=n>wrappedValue</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>wrappedValue</span><span class=p>:</span> <span class=n>T</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>get</span> <span class=p>{</span> <span class=k>return</span> <span class=n>storage</span><span class=p>.</span><span class=n>val</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kr>nonmutating</span> <span class=kr>set</span> <span class=p>{</span> <span class=n>storage</span><span class=p>.</span><span class=n>val</span> <span class=p>=</span> <span class=n>newValue</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>projectedValue</span><span class=p>:</span> <span class=n>Binding</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Binding</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>          <span class=kr>get</span><span class=p>:</span> <span class=p>{</span> <span class=n>wrappedValue</span> <span class=p>},</span>
+</span></span><span class=line><span class=cl>          <span class=kr>set</span><span class=p>:</span> <span class=p>{</span> <span class=n>wrappedValue</span> <span class=p>=</span> <span class=nv>$0</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 示例界面</span>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>MyView</span><span class=p>:</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>MyState</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>msgFlag</span><span class=p>:</span> <span class=nb>Bool</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>MyState</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>bindingText</span><span class=p>:</span> <span class=nb>String</span> <span class=p>=</span> <span class=s>&#34;Hello, World!&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>body</span><span class=p>:</span> <span class=n>some</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Text</span><span class=p>(</span><span class=n>msgFlag</span> <span class=p>?</span> <span class=s>&#34;Hello, World!&#34;</span> <span class=p>:</span> <span class=s>&#34;Hello, Swift!&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=n>Button</span><span class=p>(</span><span class=s>&#34;Click Me&#34;</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=n>msgFlag</span> <span class=p>{</span> <span class=n>msgFlag</span> <span class=p>=</span> <span class=kc>false</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=k>else</span> <span class=p>{</span> <span class=n>msgFlag</span> <span class=p>=</span> <span class=kc>true</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>Text</span><span class=p>(</span><span class=s>&#34;Binding Test Here: &#34;</span> <span class=o>+</span> <span class=n>bindingText</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>TextField</span><span class=p>(</span><span class=s>&#34;Write something&#34;</span><span class=p>,</span> <span class=n>text</span><span class=p>:</span> <span class=err>$</span><span class=n>bindingText</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=reference>Reference<a hidden class=anchor aria-hidden=true href=#reference>#</a></h2><ol><li><a href=https://fatbobman.com/zh/posts/swiftui-state/>@State 研究</a></li><li><a href=https://juejin.cn/post/6844904018121064456>Swift 5 属性包装器Property Wrappers完整指南</a></li><li><a href=https://www.fivestars.blog/articles/lets-build-state>Let&rsquo;s build @State</a></li><li><a href=https://numbbbbb.gitbooks.io/-the-swift-programming-language-/content/chapter4/05_Value_and_Reference_Types.html>Swift里的值类型与引用类型</a></li></ol></div><footer class=post-footer><ul class=post-tags><li><a href=https://weskwong.github.io/zh/tags/swiftui/>SwiftUI</a></li></ul></footer></article></main><footer class=footer><span>Copyright
+&copy;
+2021-2024
+<a href=https://weskwong.github.io/zh/ style=color:#939393>WesKwong</a>
+All Rights Reserved
+</span>·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="复制";function s(){t.innerHTML="已复制！",setTimeout(()=>{t.innerHTML="复制"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

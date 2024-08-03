@@ -9,92 +9,15 @@
       <url>https://weskwong.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
       <link>https://weskwong.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
-    <generator>Hugo -- 0.128.2</generator>
+    <generator>Hugo -- 0.131.0</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 20 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 03 Aug 2024 11:20:37 +0800</lastBuildDate>
     <atom:link href="https://weskwong.github.io/zh/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Docs</title>
-      <link>https://weskwong.github.io/zh/tags/docs/</link>
-      <pubDate>Wed, 20 Jan 2021 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/docs/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>PaperMod</title>
-      <link>https://weskwong.github.io/zh/tags/papermod/</link>
-      <pubDate>Wed, 20 Jan 2021 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/papermod/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Css</title>
-      <link>https://weskwong.github.io/zh/tags/css/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/css/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Html</title>
-      <link>https://weskwong.github.io/zh/tags/html/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/html/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Markdown</title>
-      <link>https://weskwong.github.io/zh/tags/markdown/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/markdown/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Themes</title>
-      <link>https://weskwong.github.io/zh/tags/themes/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/themes/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Code</title>
-      <link>https://weskwong.github.io/zh/tags/code/</link>
-      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/code/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Gist</title>
-      <link>https://weskwong.github.io/zh/tags/gist/</link>
-      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/gist/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Privacy</title>
-      <link>https://weskwong.github.io/zh/tags/privacy/</link>
-      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/privacy/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Shortcodes</title>
-      <link>https://weskwong.github.io/zh/tags/shortcodes/</link>
-      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/shortcodes/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Syntax</title>
-      <link>https://weskwong.github.io/zh/tags/syntax/</link>
-      <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/syntax/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Emoji</title>
-      <link>https://weskwong.github.io/zh/tags/emoji/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://weskwong.github.io/zh/tags/emoji/</guid>
+      <title>SwiftUI</title>
+      <link>https://weskwong.github.io/zh/tags/swiftui/</link>
+      <pubDate>Sat, 03 Aug 2024 11:20:37 +0800</pubDate>
+      <guid>https://weskwong.github.io/zh/tags/swiftui/</guid>
       <description></description>
     </item>
   </channel>
