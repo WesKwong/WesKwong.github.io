@@ -66,6 +66,14 @@ education:
 
 work:
   - position: Research Intern
+    company_name: Shanghai AI Laboratory
+    company_url: 'https://www.shlab.org.cn/'
+    company_logo: ''
+    date_start: 2025-11-13
+    date_end: ''
+    # summary: |
+    #   Summary Here
+  - position: Research Intern
     company_name: Shenzhen International Graduate School, Tsinghua University
     company_url: 'https://www.sigs.tsinghua.edu.cn/en/'
     company_logo: ''
@@ -140,4 +148,4 @@ awards:
     awarder: University of Science and Technology of China
 ---
 
-👋 Hi! I'm Xingguang Wei, a Ph.D. student in Information and Communication Engineering at the University of Science and Technology of China (USTC), advised by Prof. [Jifeng Dai](https://scholar.google.com/citations?user=SH_-B_AAAAAJ&hl=en) and Dr. [Hongjie Zhang](https://scholar.google.com/citations?hl=en&user=Zl_2sZYAAAAJ). I received my Bachelor's Degree in Computer Science and Technology from USTC in 2025. I'm also a core member of [InternVL](https://github.com/OpenGVLab/InternVL) team. My research focuses on large multimodal models, computer vision, and machine learning systems.
+👋 Hi! I'm Xingguang Wei, a Ph.D. student in Information and Communication Engineering at the University of Science and Technology of China (USTC), advised by Prof. [Jifeng Dai](https://scholar.google.com/citations?user=SH_-B_AAAAAJ&hl=en) and Dr. [Hongjie Zhang](https://scholar.google.com/citations?hl=en&user=Zl_2sZYAAAAJ). I received my Bachelor's Degree in Computer Science and Technology from USTC in 2025. I'm also a core member of [InternVL](https://github.com/OpenGVLab/InternVL) team in Shanghai AI Laboratory. My research focuses on large multimodal models, computer vision, and machine learning systems.

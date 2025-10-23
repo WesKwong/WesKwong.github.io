@@ -74,7 +74,7 @@ sections:
   - block: markdown
     id: pubs
     content:
-      title: '🔥 Publications'
+      title: '📚 Publications'
       subtitle: ''
       text: ''
     design:
