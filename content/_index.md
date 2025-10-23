@@ -9,17 +9,17 @@ design:
   spacing: '6rem'
 
 sections:
-  - block: resume-biography-3
+  - block: bio
     content:
       # Choose a user profile to display (a folder name within `content/authors/`)
-      username: admin
+      username: xgwei
       text: ''
       # Show a call-to-action button under your biography? (optional)
-      button:
-        text: Download CV
-        url: uploads/resume.pdf
+      # button:
+      #   text: Download CV
+      #   url: uploads/resume.pdf
       headings:
-        about: ''
+        about: 'About Me'
         education: ''
         interests: ''
     design:
@@ -30,76 +30,140 @@ sections:
         size: medium # Options: small (150px), medium (200px, default), large (320px), xl (400px), xxl (500px)
         shape: circle # Options: circle (default), square, rounded
   - block: markdown
-    content:
-      title: '📚 My Research'
-      subtitle: ''
-      text: |-
-        Use this area to speak to your mission. I'm a research scientist in the Moonshot team at DeepMind. I blog about machine learning, deep learning, and moonshots.
-
-        I apply a range of qualitative and quantitative methods to comprehensively investigate the role of science and technology in the economy.
-
-        Please reach out to collaborate 😃
-    design:
-      columns: '1'
-  - block: collection
-    id: papers
-    content:
-      title: Featured Publications
-      filters:
-        folders:
-          - publications
-        featured_only: true
-    design:
-      view: article-grid
-      columns: 2
-  - block: collection
-    content:
-      title: Recent Publications
-      text: ''
-      filters:
-        folders:
-          - publications
-        exclude_featured: false
-    design:
-      view: citation
-  - block: collection
-    id: talks
-    content:
-      title: Recent & Upcoming Talks
-      filters:
-        folders:
-          - events
-    design:
-      view: card
-  - block: collection
     id: news
     content:
-      title: Recent News
+      title: '🔥 News'
+      subtitle: ''
+      text: |-
+        <style>
+          section#news .prose {
+            max-width: 1000px !important;
+            width: 100vw !important;
+          }
+
+          section#news .prose ul li {
+            font-size: 1.3rem;
+            line-height: 1.55rem;
+            margin: 0.45rem 0;
+          }
+
+          section#news .prose ul {
+            margin-top: 0.3rem;
+            margin-bottom: 0.3rem;
+          }
+
+          section#news .prose strong {
+            font-weight: 600;
+            font-family: 'Courier New', Courier, monospace;
+          }
+
+          section#news {
+            margin-top: -2.0rem !important;
+            margin-bottom: -4.0rem !important;
+          }
+        </style>
+
+        - **2025-10-23:** 🎉 The source code of our work [VecFormer](https://github.com/WesKwong/VecFormer) is available now, feed back is welcome!
+        - **2025-09-18:** 🎉 Our work [VecFormer](https://arxiv.org/abs/2505.23395) and [ArchCAD-400K](https://arxiv.org/abs/2503.22346) are accepted by NeurIPS 2025!
+        - **2025-08-25:** 🎉 Our team released [InternVL 3.5](https://github.com/OpenGVLab/InternVL), welcome to have a try!
+        - **2025-04-14:** 🎉 Our team released [InternVL 3](https://github.com/OpenGVLab/InternVL), welcome to have a try!
+
+    design:
+      columns: '1'
+  - block: markdown
+    id: pubs
+    content:
+      title: '🔥 Publications'
       subtitle: ''
       text: ''
-      # Page type to display. E.g. post, talk, publication...
-      page_type: blog
-      # Choose how many pages you would like to display (0 = all pages)
-      count: 5
-      # Filter on criteria
-      filters:
-        author: ''
-        category: ''
-        tag: ''
-        exclude_featured: false
-        exclude_future: false
-        exclude_past: false
-        publication_type: ''
-      # Choose how many pages you would like to offset by
-      offset: 0
-      # Page order: descending (desc) or ascending (asc) date.
-      order: desc
     design:
-      # Choose a layout view
-      view: card
-      # Reduce spacing
-      spacing:
-        padding: [0, 0, 0, 0]
+      columns: '1'
+  - block: edu
+    id: exps
+    content:
+      title: '🎓 Education'
+      username: xgwei
+    design:
+      # Hugo date format
+      date_format: 'January 2006'
+      # Education or Experience section first?
+      is_education_first: false
+  - block: exp
+    id: exps
+    content:
+      title: '💼 Experience'
+      username: xgwei
+    design:
+      # Hugo date format
+      date_format: 'January 2006'
+      # Education or Experience section first?
+      is_education_first: false
+  - block: resume-awards
+    id: awards
+    content:
+      title: '🏆 Awards'
+      username: xgwei
+    design:
+      columns: '1'
+  # - block: collection
+  #   id: papers
+  #   content:
+  #     title: Featured Publications
+  #     filters:
+  #       folders:
+  #         - publications
+  #       featured_only: true
+  #   design:
+  #     view: article-grid
+  #     columns: 2
+  # - block: collection
+  #   content:
+  #     title: Recent Publications
+  #     text: ''
+  #     filters:
+  #       folders:
+  #         - publications
+  #       exclude_featured: false
+  #   design:
+  #     view: citation
+  # - block: collection
+  #   id: talks
+  #   content:
+  #     title: Recent & Upcoming Talks
+  #     filters:
+  #       folders:
+  #         - events
+  #   design:
+  #     view: card
+  # - block: collection
+  #   id: news
+  #   content:
+  #     title: Recent News
+  #     subtitle: ''
+  #     text: ''
+  #     # Page type to display. E.g. post, talk, publication...
+  #     page_type: blog
+  #     # Choose how many pages you would like to display (0 = all pages)
+  #     count: 5
+  #     # Filter on criteria
+  #     filters:
+  #       author: ''
+  #       category: ''
+  #       tag: ''
+  #       exclude_featured: false
+  #       exclude_future: false
+  #       exclude_past: false
+  #       publication_type: ''
+  #     # Choose how many pages you would like to offset by
+  #     offset: 0
+  #     # Page order: descending (desc) or ascending (asc) date.
+  #     order: desc
+  #   design:
+  #     # Choose a layout view
+  #     view: card
+  #     # Reduce spacing
+  #     spacing:
+  #       padding: [0, 0, 0, 0]
   - block: cta-card
     demo: true # Only display this section in the Hugo Blox Builder demo site
     content:
