@@ -69,7 +69,7 @@ work:
     company_name: Shanghai AI Laboratory
     company_url: 'https://www.shlab.org.cn/'
     company_logo: ''
-    date_start: 2025-11-13
+    date_start: 2024-11-13
     date_end: ''
     # summary: |
     #   Summary Here

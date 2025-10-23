@@ -64,7 +64,7 @@ sections:
           }
         </style>
 
-        - **2025-10-23:** 🎉 The source code of our work [VecFormer](https://github.com/WesKwong/VecFormer) is available now, feed back is welcome!
+        - **2025-10-23:** 🎉 The source code of our work [VecFormer](https://github.com/WesKwong/VecFormer) is available now, any and all feedback is welcome!
         - **2025-09-18:** 🎉 Our work [VecFormer](https://arxiv.org/abs/2505.23395) and [ArchCAD-400K](https://arxiv.org/abs/2503.22346) are accepted by NeurIPS 2025!
         - **2025-08-25:** 🎉 Our team released [InternVL 3.5](https://github.com/OpenGVLab/InternVL), welcome to have a try!
         - **2025-04-14:** 🎉 Our team released [InternVL 3](https://github.com/OpenGVLab/InternVL), welcome to have a try!
