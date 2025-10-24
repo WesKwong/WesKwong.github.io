@@ -4,7 +4,7 @@ window.HELP_IMPROVE_VIDEOJS = false;
 function toggleMoreWorks() {
     const dropdown = document.getElementById('moreWorksDropdown');
     const button = document.querySelector('.more-works-btn');
-    
+
     if (dropdown.classList.contains('show')) {
         dropdown.classList.remove('show');
         button.classList.remove('active');
@@ -19,7 +19,7 @@ document.addEventListener('click', function(event) {
     const container = document.querySelector('.more-works-container');
     const dropdown = document.getElementById('moreWorksDropdown');
     const button = document.querySelector('.more-works-btn');
-    
+
     if (container && !container.contains(event.target)) {
         dropdown.classList.remove('show');
         button.classList.remove('active');
@@ -41,13 +41,13 @@ function copyBibTeX() {
     const bibtexElement = document.getElementById('bibtex-code');
     const button = document.querySelector('.copy-bibtex-btn');
     const copyText = button.querySelector('.copy-text');
-    
+
     if (bibtexElement) {
         navigator.clipboard.writeText(bibtexElement.textContent).then(function() {
             // Success feedback
             button.classList.add('copied');
             copyText.textContent = 'Cop';
-            
+
             setTimeout(function() {
                 button.classList.remove('copied');
                 copyText.textContent = 'Copy';
@@ -61,7 +61,7 @@ function copyBibTeX() {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            
+
             button.classList.add('copied');
             copyText.textContent = 'Cop';
             setTimeout(function() {
@@ -90,12 +90,33 @@ window.addEventListener('scroll', function() {
     }
 });
 
+// Hero background carousel functionality
+function setupHeroBackgroundCarousel() {
+    const carousel = document.querySelector('.hero-background-carousel');
+    if (!carousel) return;
+
+    const images = carousel.querySelectorAll('img');
+    if (images.length === 0) return;
+
+    let currentIndex = 0;
+
+    // Show first image
+    images[0].classList.add('active');
+
+    // Rotate images every 5 seconds
+    setInterval(() => {
+        images[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % images.length;
+        images[currentIndex].classList.add('active');
+    }, 5000);
+}
+
 // Video carousel autoplay when in view
 function setupVideoCarouselAutoplay() {
     const carouselVideos = document.querySelectorAll('.results-carousel video');
-    
+
     if (carouselVideos.length === 0) return;
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const video = entry.target;
@@ -113,7 +134,7 @@ function setupVideoCarouselAutoplay() {
     }, {
         threshold: 0.5 // Trigger when 50% of the video is visible
     });
-    
+
     carouselVideos.forEach(video => {
         observer.observe(video);
     });
@@ -133,9 +154,12 @@ $(document).ready(function() {
 
 	// Initialize all div with carousel class
     var carousels = bulmaCarousel.attach('.carousel', options);
-	
+
     bulmaSlider.attach();
-    
+
+    // Setup hero background carousel
+    setupHeroBackgroundCarousel();
+
     // Setup video autoplay for carousel
     setupVideoCarouselAutoplay();
 
