@@ -56,7 +56,7 @@ featured: true
 # Custom links
 links:
   - type: homepage
-    url: https://hmwang2002.github.io/release/vecformer
+    url: http://home.weskwong.tech/releases/vecformer
   - type: arxiv
     url: https://arxiv.org/abs/2505.23395
   - type: pdf
