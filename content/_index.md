@@ -71,14 +71,15 @@ sections:
 
     design:
       columns: '1'
-  - block: markdown
+  - block: pub
     id: pubs
     content:
       title: '📚 Publications'
-      subtitle: ''
-      text: ''
-    design:
-      columns: '1'
+      subtitle: Selected Publications
+      source: publications
+      highlight_author: xgwei
+      sort_by: date  # date or title
+      sort_order: desc  # desc or asc
   - block: edu
     id: exps
     content:
