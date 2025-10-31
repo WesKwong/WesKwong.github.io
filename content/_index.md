@@ -107,6 +107,12 @@ sections:
       username: xgwei
     design:
       columns: '1'
+  - block: vismap
+    id: vismap
+    content:
+      title: '🌍 Visitors'
+    design:
+      columns: '1'
   # - block: collection
   #   id: papers
   #   content:
