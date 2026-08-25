@@ -1,0 +1,304 @@
+{{/* Hugo Blox: Publications Block */}}
+{{/* Documentation: https://hugoblox.com/blocks/ */}}
+{{/* License: https://github.com/HugoBlox/hugo-blox-builder/blob/main/LICENSE.md */}}
+
+{{/* Initialise */}}
+{{ $page := .wcPage }}
+{{ $block := .wcBlock }}
+
+{{/* Get configuration */}}
+{{ $source_folder := $block.content.source | default "publications" }}
+{{ $highlight_author := $block.content.highlight_author | default "" }}
+{{ $sort_by := $block.content.sort_by | default "date" }}
+{{ $sort_order := $block.content.sort_order | default "desc" }}
+
+{{/* Get all publications from the specified folder */}}
+{{ $publications := slice }}
+{{ $pub_path := printf "/content/%s/*" $source_folder }}
+{{ range where site.RegularPages "Section" $source_folder }}
+  {{ $publications = $publications | append . }}
+{{ end }}
+
+{{/* Sort publications */}}
+{{ if eq $sort_by "date" }}
+  {{ if eq $sort_order "desc" }}
+    {{ $publications = sort $publications "Date" "desc" }}
+  {{ else }}
+    {{ $publications = sort $publications "Date" "asc" }}
+  {{ end }}
+{{ else if eq $sort_by "title" }}
+  {{ if eq $sort_order "desc" }}
+    {{ $publications = sort $publications "Title" "desc" }}
+  {{ else }}
+    {{ $publications = sort $publications "Title" "asc" }}
+  {{ end }}
+{{ end }}
+
+<div class="publications-block py-8 px-4 sm:py-12 md:py-16 lg:py-24 relative">
+  <div class="max-w-3xl mx-auto">
+
+    {{/* Block Title */}}
+    {{ with $block.content.title }}
+    <div class="mb-12 text-center">
+      <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ . }}</h2>
+      {{ with $block.content.subtitle }}
+      <p class="text-xl text-gray-600 dark:text-gray-400">{{ . }}</p>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    {{/* Publications List */}}
+    <div class="space-y-6">
+      {{ range $index, $pub := $publications }}
+      <div class="publication-item">
+
+        {{/* Authors in APA style */}}
+        <div class="text-gray-900 dark:text-gray-100 mb-1">
+          {{ $authors := $pub.Params.authors }}
+          {{ $author_notes := $pub.Params.author_notes }}
+          {{ $num_authors := len $authors }}
+
+          {{ range $idx, $author_id := $authors }}
+            {{/* Get author page */}}
+            {{ $author_page := site.GetPage (printf "/authors/%s" $author_id) }}
+            {{ $author_name := $author_id }}
+            {{ if $author_page }}
+              {{ $author_name = $author_page.Title }}
+            {{ end }}
+
+            {{/* Check if this author should be highlighted */}}
+            {{ $is_highlighted := false }}
+            {{ if $highlight_author }}
+              {{ if eq $author_id $highlight_author }}
+                {{ $is_highlighted = true }}
+              {{ end }}
+            {{ else }}
+              {{/* Check if author has highlight_name set to true */}}
+              {{ if $author_page }}
+                {{ if $author_page.Params.highlight_name }}
+                  {{ $is_highlighted = true }}
+                {{ end }}
+              {{ end }}
+            {{ end }}
+
+            {{/* Format author name */}}
+            {{ if $is_highlighted }}
+              <span class="font-bold">{{ $author_name }}</span>
+            {{ else }}
+              <span>{{ $author_name }}</span>
+            {{ end }}
+
+            {{/* Add equal contribution marker if applicable */}}
+            {{ if $author_notes }}
+              {{ $note := index $author_notes $idx }}
+              {{ if $note }}
+                {{ if or (in $note "Equal") (in $note "equal") }}
+                  <span class="text-primary-600 dark:text-primary-400 text-base align-top">*</span>
+                {{ end }}
+              {{ end }}
+            {{ end }}
+
+            {{/* Add comma separator */}}
+            {{ if lt (add $idx 1) $num_authors }}
+              <span>, </span>
+            {{ end }}
+          {{ end }}
+
+          {{/* Publication venue and date */}}
+          {{ with $pub.Date }}
+            <span> ({{ .Format "2006" }}). </span>
+          {{ end }}
+        </div>
+
+        {{/* Publication Title */}}
+        <div class="mb-2">
+          <a href="{{ $pub.RelPermalink }}" class="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors underline decoration-1 underline-offset-2">
+            {{ $pub.Title }}
+          </a>
+          <span class="text-gray-900 dark:text-white">.</span>
+          {{ with $pub.Params.publication_short }}
+            <span class="text-gray-700 dark:text-gray-300 ml-1 italic">{{ . | markdownify }}</span>
+          {{ end }}
+        </div>
+
+        {{/* Action Buttons */}}
+        <div class="flex flex-wrap gap-3 items-center">
+          {{/* HOMEPAGE button - always show first */}}
+          {{ $has_custom_homepage := false }}
+          {{ range $pub.Params.links }}
+            {{ if eq .type "homepage" }}
+              {{ $has_custom_homepage = true }}
+              {{ $link_url := .url }}
+              {{ if $link_url }}
+                {{ if ne $link_url "#" }}
+                  {{ if ne $link_url "" }}
+                    {{ $is_external := hasPrefix $link_url "http" }}
+                    <a href="{{ $link_url }}" {{ if $is_external }}target="_blank" rel="noopener"{{ end }}
+                       class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                      </svg>
+                      HOMEPAGE
+                    </a>
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+            {{ end }}
+          {{ end }}
+          {{/* Default HOMEPAGE button if no custom homepage link */}}
+          {{ if not $has_custom_homepage }}
+            <a href="{{ $pub.RelPermalink }}"
+               class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+              </svg>
+              HOMEPAGE
+            </a>
+          {{ end }}
+
+          {{/* Render other buttons in the order they appear in links */}}
+          {{ range $pub.Params.links }}
+            {{ $link_url := .url }}
+            {{ $link_type := .type }}
+
+            {{/* Skip homepage as it's already rendered */}}
+            {{ if eq $link_type "homepage" }}
+              {{/* Skip */}}
+
+            {{/* arXiv button */}}
+            {{ else if eq $link_type "arxiv" }}
+              {{ if and (not $link_url) .id }}
+                {{ $link_url = printf "https://arxiv.org/abs/%s" .id }}
+              {{ end }}
+              {{ if $link_url }}
+                {{ if ne $link_url "#" }}
+                  {{ if ne $link_url "" }}
+                    <a href="{{ $link_url }}" target="_blank" rel="noopener"
+                       class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                      </svg>
+                      arXiv
+                    </a>
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+
+            {{/* PDF button */}}
+            {{ else if eq $link_type "pdf" }}
+              {{ if and (not $link_url) .provider }}
+                {{ if eq .provider "arxiv" }}
+                  {{ with $pub.Params.hugoblox }}
+                    {{ with .ids }}
+                      {{ with .arxiv }}
+                        {{ $link_url = printf "https://arxiv.org/pdf/%s.pdf" . }}
+                      {{ end }}
+                    {{ end }}
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+              {{ if $link_url }}
+                {{ if ne $link_url "#" }}
+                  {{ if ne $link_url "" }}
+                    <a href="{{ $link_url }}" target="_blank" rel="noopener"
+                       class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                      </svg>
+                      PDF
+                    </a>
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+
+            {{/* CODE button */}}
+            {{ else if eq $link_type "code" }}
+              {{ if $link_url }}
+                {{ if ne $link_url "#" }}
+                  {{ if ne $link_url "" }}
+                    <a href="{{ $link_url }}" target="_blank" rel="noopener"
+                       class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                      </svg>
+                      CODE
+                    </a>
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+            {{ end }}
+          {{ end }}
+
+          {{/* CITE button with BibTeX copy - always show after links */}}
+          {{ $bib_file := $pub.Resources.GetMatch "cite.bib" }}
+          {{ if $bib_file }}
+            <button type="button"
+                    data-bibtex="{{ $bib_file.Content | htmlEscape }}"
+                    onclick="copyBibtexToClipboard(this)"
+                    class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm inline-flex items-center gap-1 cursor-pointer">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              CITE
+            </button>
+          {{ end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+
+    {{/* Empty state */}}
+    {{ if eq (len $publications) 0 }}
+    <div class="text-center py-12">
+      <p class="text-gray-500 dark:text-gray-400 text-lg">No publications found.</p>
+    </div>
+    {{ end }}
+  </div>
+</div>
+
+{{/* JavaScript for BibTeX copy functionality */}}
+<script>
+  function copyBibtexToClipboard(button) {
+    const bibtex = button.getAttribute('data-bibtex');
+    if (!bibtex) {
+      alert('BibTeX not available');
+      return;
+    }
+
+    // Use the Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(bibtex).then(function() {
+        // Show success feedback
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copied!';
+        button.disabled = true;
+
+        // Reset after 2 seconds
+        setTimeout(function() {
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }, 2000);
+      }, function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy BibTeX. Please try again.');
+      });
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = bibtex;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('BibTeX copied to clipboard!');
+      } catch (err) {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy BibTeX. Please try again.');
+      }
+      document.body.removeChild(textArea);
+    }
+  }
+</script>
+

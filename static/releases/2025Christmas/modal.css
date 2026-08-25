@@ -1,0 +1,109 @@
+/* 模态框背景 */
+#intro-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 隐藏状态 */
+#intro-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* 模态框内容 */
+.modal-content {
+    background: linear-gradient(135deg, #1a2a3a 0%, #0d1216 100%);
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 90%;
+    width: 400px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+    position: relative; /* 为了定位关闭按钮（如果有） */
+}
+
+.modal-content h1 {
+    color: #e74c3c;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+.modal-content h2 {
+    color: #2ecc71;
+    margin-top: 20px;
+    font-size: 1.2em;
+}
+
+.modal-content p {
+    line-height: 1.6;
+    color: #ccc;
+    margin-bottom: 15px;
+    font-size: 0.95em;
+}
+
+/* 帮助按钮 */
+.help-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px; /* 改到右下角 */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 50;
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.help-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+#start-btn {
+    background: linear-gradient(to right, #27ae60, #2ecc71);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1em;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+#start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+
+#start-btn:active {
+    transform: scale(0.95);
+}

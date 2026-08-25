@@ -1,0 +1,196 @@
+---
+# Leave the homepage title empty to use the site title
+title: ''
+date: 2022-10-24
+type: landing
+
+design:
+  # Default section spacing
+  spacing: '6rem'
+
+sections:
+  - block: bio
+    id: bio
+    content:
+      # Choose a user profile to display (a folder name within `content/authors/`)
+      username: xgwei
+      text: ''
+      # Show a call-to-action button under your biography? (optional)
+      # button:
+      #   text: Download CV
+      #   url: uploads/resume.pdf
+      headings:
+        about: 'About Me'
+        education: ''
+        interests: ''
+    design:
+      # Apply a gradient background
+      css_class: hbx-bg-gradient
+      # Avatar customization
+      avatar:
+        size: medium # Options: small (150px), medium (200px, default), large (320px), xl (400px), xxl (500px)
+        shape: circle # Options: circle (default), square, rounded
+  - block: markdown
+    id: news
+    content:
+      title: '🔥 News'
+      subtitle: ''
+      text: |-
+        <style>
+          section#news .prose {
+            max-width: 1000px !important;
+            width: 100vw !important;
+          }
+
+          section#news .prose ul li {
+            font-size: 1.3rem;
+            line-height: 1.55rem;
+            margin: 0.45rem 0;
+          }
+
+          section#news .prose ul {
+            margin-top: 0.3rem;
+            margin-bottom: 0.3rem;
+          }
+
+          section#news .prose strong {
+            font-weight: 600;
+            font-family: 'Courier New', Courier, monospace;
+          }
+
+          section#news {
+            margin-top: -2.0rem !important;
+            margin-bottom: -4.0rem !important;
+          }
+        </style>
+
+        - **2025-10-23:** 🎉 The source code of our work [VecFormer](https://github.com/WesKwong/VecFormer) is available now, any and all feedback is welcome!
+        - **2025-09-18:** 🎉 Our work [VecFormer](https://arxiv.org/abs/2505.23395) and [ArchCAD-400K](https://arxiv.org/abs/2503.22346) are accepted by NeurIPS 2025!
+        - **2025-08-25:** 🎉 Our team released [InternVL 3.5](https://github.com/OpenGVLab/InternVL), welcome to have a try!
+        - **2025-04-14:** 🎉 Our team released [InternVL 3](https://github.com/OpenGVLab/InternVL), welcome to have a try!
+
+    design:
+      columns: '1'
+  - block: pub
+    id: pubs
+    content:
+      title: '📚 Publications'
+      subtitle: Selected Publications
+      source: publications
+      highlight_author: xgwei
+      sort_by: date  # date or title
+      sort_order: desc  # desc or asc
+  - block: edu
+    id: exps
+    content:
+      title: '🎓 Education'
+      username: xgwei
+    design:
+      # Hugo date format
+      date_format: 'January 2006'
+      # Education or Experience section first?
+      is_education_first: false
+  - block: exp
+    id: exps
+    content:
+      title: '💼 Experience'
+      username: xgwei
+    design:
+      # Hugo date format
+      date_format: 'January 2006'
+      # Education or Experience section first?
+      is_education_first: false
+  - block: resume-awards
+    id: awards
+    content:
+      title: '🏆 Awards'
+      username: xgwei
+    design:
+      columns: '1'
+  # Temporarily disabled because the MapMyVisitors service is unavailable.
+  # - block: vismap
+  #   id: vismap
+  #   content:
+  #     title: '🌍 Visitors'
+  #  design:
+  #    columns: '1'
+  # - block: collection
+  #   id: papers
+  #   content:
+  #     title: Featured Publications
+  #     filters:
+  #       folders:
+  #         - publications
+  #       featured_only: true
+  #   design:
+  #     view: article-grid
+  #     columns: 2
+  # - block: collection
+  #   content:
+  #     title: Recent Publications
+  #     text: ''
+  #     filters:
+  #       folders:
+  #         - publications
+  #       exclude_featured: false
+  #   design:
+  #     view: citation
+  # - block: collection
+  #   id: talks
+  #   content:
+  #     title: Recent & Upcoming Talks
+  #     filters:
+  #       folders:
+  #         - events
+  #   design:
+  #     view: card
+  # - block: collection
+  #   id: news
+  #   content:
+  #     title: Recent News
+  #     subtitle: ''
+  #     text: ''
+  #     # Page type to display. E.g. post, talk, publication...
+  #     page_type: blog
+  #     # Choose how many pages you would like to display (0 = all pages)
+  #     count: 5
+  #     # Filter on criteria
+  #     filters:
+  #       author: ''
+  #       category: ''
+  #       tag: ''
+  #       exclude_featured: false
+  #       exclude_future: false
+  #       exclude_past: false
+  #       publication_type: ''
+  #     # Choose how many pages you would like to offset by
+  #     offset: 0
+  #     # Page order: descending (desc) or ascending (asc) date.
+  #     order: desc
+  #   design:
+  #     # Choose a layout view
+  #     view: card
+  #     # Reduce spacing
+  #     spacing:
+  #       padding: [0, 0, 0, 0]
+  - block: cta-card
+    demo: true # Only display this section in the Hugo Blox Builder demo site
+    content:
+      title: 👉 Build your own academic website like this
+      text: |-
+        This site is generated by Hugo Blox Builder - the FREE, Hugo-based open source website builder trusted by 250,000+ academics like you.
+
+        <a class="github-button" href="https://github.com/HugoBlox/hugo-blox-builder" data-color-scheme="no-preference: light; light: light; dark: dark;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star HugoBlox/hugo-blox-builder on GitHub">Star</a>
+
+        Easily build anything with blocks - no-code required!
+
+        From landing pages, second brains, and courses to academic resumés, conferences, and tech blogs.
+      button:
+        text: Get Started
+        url: https://hugoblox.com/templates/
+    design:
+      card:
+        # Card background color (CSS class)
+        css_class: 'bg-primary-300'
+        css_style: ''
+---

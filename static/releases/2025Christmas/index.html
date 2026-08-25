@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Merry Christmas!</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="modal.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- 欢迎模态框 -->
+    <div id="intro-modal">
+        <div class="modal-content">
+            <h1>Merry Christmas! 🎄</h1>
+            <p>欢迎来到这个互动圣诞树网页</p>
+
+            <h2>🔒 关于摄像头权限</h2>
+            <p>我们需要使用您的摄像头来识别手势<br>所有处理都在本地进行，视频数据不会上传到任何服务器</p>
+
+            <h2>👋 如何互动</h2>
+            <p><strong>张开手掌 🖐️</strong>：将圣诞树散开成魔法粒子</p>
+            <p><strong>握紧拳头 ✊</strong>：让粒子重新聚合成圣诞树</p>
+            <p><strong>移动手掌 👋</strong>：控制观察视角</p>
+
+            <button id="start-btn">开始体验</button>
+        </div>
+    </div>
+
+    <!-- 帮助按钮 -->
+    <button id="help-btn" class="help-btn">?</button>
+
+    <div id="loading">Loading models...</div>
+    <video id="input_video" style="display: none;" playsinline muted></video>
+    <canvas id="output_canvas"></canvas>
+
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
+
